@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title></title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .form-container {
+            max-width: 800px;
+            margin: 120px auto 2rem;
+            padding: 2rem;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            animation: slideInUp 0.8s ease-out;
+        }
+
+        .form-title {
+            text-align: center;
+            color: #333;
+            margin-bottom: 2rem;
+            font-size: 2rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #9934be;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-select {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+            transition: all 0.3s ease;
+        }
+
+        .form-textarea {
+            width: 100%;
+            padding: 1rem;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 1rem;
+            resize: vertical;
+            min-height: 100px;
+            transition: all 0.3s ease;
+        }
+
+        .form-buttons {
+            grid-column: 1 / -1;
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 2rem;
+        }
+
+        .btn-cancel {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn-cancel:hover {
+            background: #5a6268;
+        }
+
+        .success-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+            animation: slideInDown 0.5s ease-out;
+        }
+
+        .error-message {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+            display: none;
+            animation: slideInDown 0.5s ease-out;
+        }
+
+        @keyframes slideInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .form-container {
+                margin: 100px 1rem 2rem;
+                padding: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">
+                <i class="fas fa-graduation-cap"></i>
+                <span>Academic Records</span>
+            </div>
+            <div class="menu-toggle" id="menuToggle">
+                <div class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </div>
+            </div>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="index.html" class="nav-link">Home</a></li>
+                <li><a href="students.html" class="nav-link">Students</a></li>
+                <li><a href="add-student.html" class="nav-link">Add Student</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="form-container">
+            <h1 class="form-title">Add New Student</h1>
+            
+            <div class="success-message" id="successMessage">
+                <i class="fas fa-check-circle"></i> Student added successfully!
+            </div>
+            
+            <div class="error-message" id="errorMessage">
+                <i class="fas fa-exclamation-circle"></i> Please fill in all required fields.
+            </div>
+
+            <form id="addStudentForm">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label for="firstName" class="form-label">First Name *</label>
+                        <input type="text" id="firstName" name="firstName" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lastName" class="form-label">Last Name *</label>
+                        <input type="text" id="lastName" name="lastName" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email" class="form-label">Email Address *</label>
+                        <input type="email" id="email" name="email" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone" class="form-label">Phone Number</label>
+                        <input type="tel" id="phone" name="phone" class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="dateOfBirth" class="form-label">Date of Birth *</label>
+                        <input type="date" id="dateOfBirth" name="dateOfBirth" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="gender" class="form-label">Gender *</label>
+                        <select id="gender" name="gender" class="form-select" required>
+                            <option value="">Select Gender</option>
+                            <option value="Male">Male</option>
+                            <option value="Female">Female</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="studentId" class="form-label">Student ID *</label>
+                        <input type="text" id="studentId" name="studentId" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="Semester" class="form-label">Semester/Class *</label>
+                        <select id="Semester" name="Semester" class="form-select" required>
+                            <option value="">Select Semester</option>
+                            <option value="Semester 1">Semester 1</option>
+                            <option value="Semester 2">Semester 2</option>
+                            <option value="Semester 3">Semester 3</option>
+                            <option value="Semester 4">Semester 4</option>
+                            <option value="Semester 5">Semester 5</option>
+                            <option value="Semester 6">Semester 6</option>
+                            <option value="Semester 7">Semester 7</option>
+                            <option value="Semester 8">Semester 8</option>
+                            <option value="Semester 9">Semester 9</option>
+                            <option value="Semester 10">Semester 10</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="address" class="form-label">Address</label>
+                        <textarea id="address" name="address" class="form-textarea" placeholder="Enter student's address"></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="emergencyContact" class="form-label">Emergency Contact</label>
+                        <input type="tel" id="emergencyContact" name="emergencyContact" class="form-input">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="bloodGroup" class="form-label">Blood Group</label>
+                        <select id="bloodGroup" name="bloodGroup" class="form-select">
+                            <option value="">Select Blood Group</option>
+                            <option value="A+">A+</option>
+                            <option value="A-">A-</option>
+                            <option value="B+">B+</option>
+                            <option value="B-">B-</option>
+                            <option value="AB+">AB+</option>
+                            <option value="AB-">AB-</option>
+                            <option value="O+">O+</option>
+                            <option value="O-">O-</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="enrollmentDate" class="form-label">Enrollment Date *</label>
+                        <input type="date" id="enrollmentDate" name="enrollmentDate" class="form-input" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="status" class="form-label">Status *</label>
+                        <select id="status" name="status" class="form-select" required>
+                            <option value="">Select Status</option>
+                            <option value="Active">Active</option>
+                            <option value="Inactive">Inactive</option>
+                            <option value="Suspended">Suspended</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-buttons">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Add Student
+                    </button>
+                    <button type="button" class="btn btn-cancel" onclick="resetForm()">
+                        <i class="fas fa-undo"></i> Reset Form
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <script>
+        // Initialize form functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            initMenuToggle();
+            initFormValidation();
+            setDefaultDates();
+            checkForEditMode();
+        });
+
+        // Menu toggle functionality
+        function initMenuToggle() {
+            const menuToggle = document.getElementById('menuToggle');
+            const navMenu = document.getElementById('navMenu');
+            
+            menuToggle.addEventListener('click', function() {
+                menuToggle.classList.toggle('active');
+                navMenu.classList.toggle('active');
+            });
+        }
+
+        // Form validation and submission
+        function initFormValidation() {
+            const form = document.getElementById('addStudentForm');
+            const successMessage = document.getElementById('successMessage');
+            const errorMessage = document.getElementById('errorMessage');
+
+            form.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Hide previous messages
+                successMessage.style.display = 'none';
+                errorMessage.style.display = 'none';
+
+                // Validate form
+                if (validateForm()) {
+                    // Get form data
+                    const formData = new FormData(form);
+                    const studentData = Object.fromEntries(formData.entries());
+                    
+                    // Check if this is edit mode
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const isEdit = urlParams.get('edit');
+                    
+                    if (isEdit === 'true') {
+                        // Update existing student
+                        const editStudent = JSON.parse(sessionStorage.getItem('editStudent') || 'null');
+                        if (editStudent) {
+                            studentData.id = editStudent.id;
+                            studentData.createdAt = editStudent.createdAt;
+                            studentData.updatedAt = new Date().toISOString();
+                            updateStudent(studentData);
+                            successMessage.innerHTML = '<i class="fas fa-check-circle"></i> Student updated successfully!';
+                        }
+                    } else {
+                        // Add new student
+                        studentData.id = Date.now().toString();
+                        studentData.createdAt = new Date().toISOString();
+                        saveStudent(studentData);
+                        successMessage.innerHTML = '<i class="fas fa-check-circle"></i> Student added successfully!';
+                    }
+                    
+                    // Show success message
+                    successMessage.style.display = 'block';
+                    
+                    // Clear session storage
+                    sessionStorage.removeItem('editStudent');
+                    
+                    // Reset form and redirect after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = 'students.html';
+                    }, 2000);
+                } else {
+                    errorMessage.style.display = 'block';
+                }
+            });
+        }
+
+        // Validate form fields
+        function validateForm() {
+            const requiredFields = [
+                'firstName', 'lastName', 'email', 'dateOfBirth', 
+                'gender', 'studentId', 'Semester', 'enrollmentDate', 'status'
+            ];
+            
+            for (let field of requiredFields) {
+                const input = document.getElementById(field);
+                if (!input.value.trim()) {
+                    input.style.borderColor = '#ff6b6b';
+                    return false;
+                } else {
+                    input.style.borderColor = '#e1e5e9';
+                }
+            }
+            
+            // Validate email format
+            const email = document.getElementById('email').value;
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email)) {
+                document.getElementById('email').style.borderColor = '#ff6b6b';
+                return false;
+            }
+            
+            return true;
+        }
+
+        // Save student data to localStorage
+        function saveStudent(studentData) {
+            let students = JSON.parse(localStorage.getItem('students') || '[]');
+            students.push(studentData);
+            localStorage.setItem('students', JSON.stringify(students));
+        }
+
+        // Update student data in localStorage
+        function updateStudent(studentData) {
+            let students = JSON.parse(localStorage.getItem('students') || '[]');
+            const index = students.findIndex(s => s.id === studentData.id);
+            if (index !== -1) {
+                students[index] = studentData;
+                localStorage.setItem('students', JSON.stringify(students));
+            }
+        }
+
+        // Reset form
+        function resetForm() {
+            document.getElementById('addStudentForm').reset();
+            setDefaultDates();
+            
+            // Reset border colors
+            const inputs = document.querySelectorAll('.form-input, .form-select, .form-textarea');
+            inputs.forEach(input => {
+                input.style.borderColor = '#e1e5e9';
+            });
+            
+            // Hide messages
+            document.getElementById('successMessage').style.display = 'none';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        // Set default dates
+        function setDefaultDates() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('enrollmentDate').value = today;
+        }
+
+        // Real-time validation
+        document.querySelectorAll('.form-input, .form-select, .form-textarea').forEach(input => {
+            input.addEventListener('blur', function() {
+                if (this.hasAttribute('required') && !this.value.trim()) {
+                    this.style.borderColor = '#ff6b6b';
+                } else {
+                    this.style.borderColor = '#e1e5e9';
+                }
+            });
+            
+            input.addEventListener('input', function() {
+                if (this.style.borderColor === 'rgb(255, 107, 107)') {
+                    this.style.borderColor = '#e1e5e9';
+                }
+            });
+        });
+
+        // Check for edit mode
+        function checkForEditMode() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const isEdit = urlParams.get('edit');
+            
+            if (isEdit === 'true') {
+                const editStudent = JSON.parse(sessionStorage.getItem('editStudent') || 'null');
+                if (editStudent) {
+                    populateForm(editStudent);
+                    updatePageTitle('Edit Student');
+                    updateSubmitButton('Update Student');
+                }
+            }
+        }
+
+        // Populate form with student data
+        function populateForm(student) {
+            Object.keys(student).forEach(key => {
+                const input = document.getElementById(key);
+                if (input) {
+                    input.value = student[key];
+                }
+            });
+        }
+
+        // Update page title
+        function updatePageTitle(title) {
+            document.querySelector('.form-title').textContent = title;
+            document.title = title + ' - Student Management System';
+        }
+
+        // Update submit button
+        function updateSubmitButton(text) {
+            const submitBtn = document.querySelector('button[type="submit"]');
+            submitBtn.innerHTML = `<i class="fas fa-save"></i> ${text}`;
+        }
+    </script>
+</body>
+</html> 
