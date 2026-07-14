@@ -1,0 +1,199 @@
+<!-- templates/leaderboard.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Planner - Leaderboard</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding-top: 80px;
+            transition: background 0.3s ease;
+        }
+        
+        /* Dark Mode Styles */
+        body.dark {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        }
+        
+        body.dark .navbar {
+            background: rgba(30,30,46,0.95);
+        }
+        
+        body.dark .card {
+            background: #1e1e2e;
+            color: #eee;
+        }
+        
+        body.dark .leaderboard-item {
+            border-bottom-color: #3a3a4a;
+        }
+        
+        body.dark .user-name {
+            color: #eee;
+        }
+        
+        body.dark .rank {
+            color: #aaa;
+        }
+        
+        .theme-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 50%;
+            transition: 0.3s;
+            color: #667eea;
+        }
+        .theme-btn:hover {
+            background: rgba(0,0,0,0.1);
+            transform: scale(1.1);
+        }
+        
+        .navbar {
+            background: rgba(255,255,255,0.95);
+            padding: 15px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+        .logo i { font-size: 28px; color: #667eea; }
+        .logo span { font-size: 24px; font-weight: 700; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .nav-links a { text-decoration: none; color: #333; margin-left: 20px; font-weight: 500; transition: 0.3s; }
+        .nav-links a:hover { color: #667eea; }
+        body.dark .nav-links a { color: #eee; }
+        .container { max-width: 800px; margin: 0 auto; padding: 20px; }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            transition: background 0.3s ease;
+        }
+        .card h2 { margin-bottom: 20px; color: #667eea; display: flex; align-items: center; gap: 10px; }
+        .leaderboard-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            padding: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        .leaderboard-item:last-child { border-bottom: none; }
+        .rank {
+            font-size: 24px;
+            font-weight: bold;
+            width: 60px;
+        }
+        .rank-1 { color: #FFD700; }
+        .rank-2 { color: #C0C0C0; }
+        .rank-3 { color: #CD7F32; }
+        .user-info { flex: 1; }
+        .user-name { font-weight: 600; font-size: 16px; color: #333; }
+        .hours { color: #667eea; font-weight: bold; font-size: 18px; }
+        .btn-back {
+            background: #667eea;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+            transition: 0.3s;
+        }
+        .btn-back:hover { transform: translateY(-2px); }
+        .trophy-icon { font-size: 30px; }
+        
+        .login-btn {
+            padding: 10px 25px;
+            border-radius: 50px;
+            transition: 0.3s;
+        }
+        .login-btn:hover { transform: translateY(-2px); }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo"><i class="fas fa-book"></i><span>StudyPlanner</span></a>
+            <div class="nav-links">
+                <button id="themeToggle" class="theme-btn"><i class="fas fa-moon"></i></button>
+                <a href="/dashboard">Dashboard</a>
+                <a href="/logout" class="login-btn" style="background: #ff6b6b; color: white;">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <div class="card">
+            <h2><i class="fas fa-trophy"></i> Study Leaderboard</h2>
+            <div class="leaderboard-list">
+                {% for user in users %}
+                <div class="leaderboard-item">
+                    <div class="rank rank-{{ loop.index }}">
+                        {% if loop.index == 1 %}🥇
+                        {% elif loop.index == 2 %}🥈
+                        {% elif loop.index == 3 %}🥉
+                        {% else %}#{{ loop.index }}{% endif %}
+                    </div>
+                    <div class="user-info">
+                        <div class="user-name">{{ user.username }}</div>
+                    </div>
+                    <div class="hours">{{ user.total_study_time }} hrs</div>
+                </div>
+                {% endfor %}
+            </div>
+            <div style="text-align: center;">
+                <a href="/dashboard" class="btn-back"><i class="fas fa-arrow-left"></i> Back to Dashboard</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dark Mode Toggle
+        const themeToggle = document.getElementById('themeToggle');
+        const savedTheme = localStorage.getItem('theme');
+        
+        if (savedTheme === 'dark') {
+            document.body.classList.add('dark');
+            themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+        }
+        
+        themeToggle.addEventListener('click', () => {
+            document.body.classList.toggle('dark');
+            if (document.body.classList.contains('dark')) {
+                localStorage.setItem('theme', 'dark');
+                themeToggle.innerHTML = '<i class="fas fa-sun"></i>';
+            } else {
+                localStorage.setItem('theme', 'light');
+                themeToggle.innerHTML = '<i class="fas fa-moon"></i>';
+            }
+        });
+    </script>
+</body>
+</html>

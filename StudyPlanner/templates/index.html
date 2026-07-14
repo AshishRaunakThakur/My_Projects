@@ -1,0 +1,291 @@
+<!-- templates/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Study Planner - Master Your Learning</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            animation: pageFadeIn 0.5s ease;
+        }
+        @keyframes pageFadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .navbar {
+            background: rgba(255,255,255,0.95);
+            backdrop-filter: blur(10px);
+            padding: 15px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+        }
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+            text-decoration: none;
+        }
+        .logo i { font-size: 28px; color: #667eea; }
+        .logo span { font-size: 24px; font-weight: 700; background: linear-gradient(135deg, #667eea, #764ba2); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .nav-links { display: flex; gap: 20px; align-items: center; }
+        .nav-links a { text-decoration: none; color: #333; font-weight: 500; transition: 0.3s; cursor: pointer; }
+        .nav-links a:hover { color: #667eea; }
+        .login-btn { padding: 10px 25px; border-radius: 50px; transition: 0.3s; }
+        .login-btn:hover { transform: translateY(-2px); }
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding-top: 80px;
+            animation: slideUp 0.6s ease;
+        }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(50px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .hero-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+        .hero-content h1 { font-size: 48px; color: white; margin-bottom: 20px; }
+        .hero-content h1 span { background: rgba(255,255,255,0.2); padding: 0 10px; border-radius: 20px; }
+        .hero-content p { color: rgba(255,255,255,0.9); font-size: 18px; margin-bottom: 30px; }
+        .hero-buttons { display: flex; gap: 20px; }
+        .btn-primary { padding: 15px 35px; background: white; color: #667eea; text-decoration: none; border-radius: 50px; font-weight: 600; transition: 0.3s; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
+        .btn-secondary { padding: 15px 35px; background: transparent; color: white; text-decoration: none; border-radius: 50px; font-weight: 600; border: 2px solid white; transition: 0.3s; display: inline-flex; align-items: center; gap: 10px; cursor: pointer; }
+        .btn-primary:hover, .btn-secondary:hover { transform: translateY(-2px); }
+        .hero-image .card { background: rgba(255,255,255,0.95); border-radius: 20px; padding: 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 15px; animation: float 3s ease infinite; }
+        @keyframes float { 0%,100%{ transform: translateY(0); } 50%{ transform: translateY(-10px); } }
+        .features { background: white; padding: 80px 0; }
+        .features-container { max-width: 1200px; margin: 0 auto; padding: 0 20px; }
+        .section-title { text-align: center; font-size: 36px; color: #333; margin-bottom: 50px; }
+        .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .feature-card { text-align: center; padding: 40px 30px; background: #f8f9fa; border-radius: 30px; transition: 0.3s; animation: fadeInUp 0.5s ease; animation-fill-mode: both; }
+        .feature-card:nth-child(1) { animation-delay: 0.1s; }
+        .feature-card:nth-child(2) { animation-delay: 0.2s; }
+        .feature-card:nth-child(3) { animation-delay: 0.3s; }
+        .feature-card:nth-child(4) { animation-delay: 0.4s; }
+        .feature-card:nth-child(5) { animation-delay: 0.5s; }
+        .feature-card:nth-child(6) { animation-delay: 0.6s; }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .feature-card:hover { transform: translateY(-10px); box-shadow: 0 20px 40px rgba(0,0,0,0.1); }
+        .feature-icon { width: 80px; height: 80px; background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 20px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; color: white; font-size: 35px; }
+        .feature-card h3 { font-size: 22px; color: #333; margin-bottom: 15px; }
+        .feature-card p { color: #666; line-height: 1.6; }
+        .footer { background: #1a1a1a; color: white; padding: 30px 0; text-align: center; }
+        .flash-messages { position: fixed; top: 80px; right: 20px; z-index: 1000; }
+        .flash-message { background: white; padding: 15px 20px; border-radius: 10px; margin-bottom: 10px; display: flex; align-items: center; gap: 10px; border-left: 4px solid; box-shadow: 0 5px 15px rgba(0,0,0,0.2); animation: slideInRight 0.5s ease; }
+        .flash-message.success { border-left-color: #28a745; }
+        .flash-message.error { border-left-color: #dc3545; }
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        @media (max-width: 768px) {
+            .hero-container { grid-template-columns: 1fr; text-align: center; }
+            .hero-buttons { justify-content: center; }
+            .hero-image { display: none; }
+            .hero-content h1 { font-size: 32px; }
+            .nav-links { gap: 10px; }
+            .login-btn { padding: 8px 15px; font-size: 14px; }
+        }
+        
+        /* Loader Animation */
+        .loader-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: fadeInLoader 0.3s ease;
+        }
+        .loader-spinner {
+            text-align: center;
+            animation: bounceLoader 0.5s ease infinite;
+        }
+        .loader-spinner i {
+            font-size: 60px;
+            color: white;
+            animation: spinLoader 1s linear infinite;
+        }
+        .loader-text {
+            color: white;
+            font-size: 18px;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+        @keyframes spinLoader {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes bounceLoader {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+        @keyframes fadeInLoader {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="/" class="logo">
+                <i class="fas fa-book"></i>
+                <span>StudyPlanner</span>
+            </a>
+            <div class="nav-links">
+                <a href="/">Home</a>
+                <a href="#features">Features</a>
+                {% if session.get('user_id') %}
+                    <a href="/dashboard" class="login-btn" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">Dashboard</a>
+                    <a href="/logout" class="login-btn" style="background: #ff6b6b; color: white;">Logout</a>
+                {% else %}
+                    <a href="/login" class="login-btn" style="background: linear-gradient(135deg, #667eea, #764ba2); color: white;">Login</a>
+                    <a href="/register" class="login-btn" style="background: #667eea20; color: #667eea;">Register</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                    <div class="flash-message {{ category }}">
+                        <i class="fas fa-{{ 'check-circle' if category == 'success' else 'exclamation-circle' }}"></i>
+                        <span>{{ message }}</span>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <section id="home" class="hero">
+        <div class="hero-container">
+            <div class="hero-content">
+                <h1>Master Your Studies with <span>Smart Planning</span></h1>
+                <p>Track your progress, set goals, and achieve academic excellence with our intelligent study planner.</p>
+                <div class="hero-buttons">
+                    <a href="/login" class="btn-primary"><i class="fas fa-rocket"></i> Get Started</a>
+                    <a href="#features" class="btn-secondary"><i class="fas fa-play"></i> Learn More</a>
+                </div>
+            </div>
+            <div class="hero-image">
+                <div class="card"><i class="fas fa-chart-line" style="font-size: 30px; color: #667eea;"></i><div><h3>Track Progress</h3><p>Monitor your study hours</p></div></div>
+                <div class="card"><i class="fas fa-tasks" style="font-size: 30px; color: #667eea;"></i><div><h3>Set Goals</h3><p>Achieve your targets</p></div></div>
+                <div class="card"><i class="fas fa-clock" style="font-size: 30px; color: #667eea;"></i><div><h3>Save Time</h3><p>Study efficiently</p></div></div>
+            </div>
+        </div>
+    </section>
+
+    <section id="features" class="features">
+        <div class="features-container">
+            <h2 class="section-title">Why Choose StudyPlanner?</h2>
+            <div class="features-grid">
+                <div class="feature-card"><div class="feature-icon"><i class="fas fa-book"></i></div><h3>Subject Management</h3><p>Organize all your subjects with custom target hours</p></div>
+                <div class="feature-card"><div class="feature-icon"><i class="fas fa-clock"></i></div><h3>Session Tracking</h3><p>Log your study sessions and monitor time spent</p></div>
+                <div class="feature-card"><div class="feature-icon"><i class="fas fa-chart-pie"></i></div><h3>Progress Analytics</h3><p>Visualize progress with detailed statistics</p></div>
+                <div class="feature-card"><div class="feature-icon"><i class="fas fa-calendar-week"></i></div><h3>Monthly Analysis</h3><p>Track your study patterns month by month</p></div>
+                <div class="feature-card"><div class="feature-icon"><i class="fas fa-graduation-cap"></i></div><h3>Semester Tracking</h3><p>Monitor progress across semesters</p></div>
+                <div class="feature-card"><div class="feature-icon"><i class="fas fa-mobile-alt"></i></div><h3>Responsive Design</h3><p>Access from any device</p></div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>Created by Ashish Raunak | © 2026 StudyPlanner</p>
+    </footer>
+
+    <script>
+        // Loading Animation on all page navigations
+        function showLoader() {
+            let loader = document.getElementById('page-loader');
+            if (!loader) {
+                loader = document.createElement('div');
+                loader.id = 'page-loader';
+                loader.innerHTML = `
+                    <div class="loader-overlay">
+                        <div class="loader-spinner">
+                            <i class="fas fa-book"></i>
+                            <div class="loader-text">Loading...</div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(loader);
+            }
+            loader.style.display = 'flex';
+        }
+        
+        function hideLoader() {
+            const loader = document.getElementById('page-loader');
+            if (loader) {
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                }, 500);
+            }
+        }
+        
+        // Add click handlers to all navigation links
+        document.querySelectorAll('a').forEach(link => {
+            const href = link.getAttribute('href');
+            if (href && !href.startsWith('#') && href !== 'javascript:void(0)' && !href.includes('javascript:')) {
+                link.addEventListener('click', function(e) {
+                    // Don't add loader for external links or mailto
+                    if (href.startsWith('http') || href.startsWith('mailto') || href.startsWith('tel')) {
+                        return;
+                    }
+                    e.preventDefault();
+                    showLoader();
+                    setTimeout(() => {
+                        window.location.href = href;
+                    }, 500);
+                });
+            }
+        });
+        
+        // Hide loader when page loads
+        window.addEventListener('load', function() {
+            hideLoader();
+        });
+        
+        // Auto-hide flash messages
+        setTimeout(() => {
+            document.querySelectorAll('.flash-message').forEach(msg => msg.remove());
+        }, 5000);
+    </script>
+</body>
+</html>
