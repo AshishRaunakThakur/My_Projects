@@ -1,0 +1,411 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users - Admin{% endblock %}
+
+{% block content %}
+<!-- Admin Permission Check -->
+{% if current_user.user_type != 'admin' %}
+    <script>
+        window.location.href = "{{ url_for('dashboard') }}";
+    </script>
+{% endif %}
+
+<div class="admin-page">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <div class="header-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div>
+                    <h1 class="page-title">Manage Users</h1>
+                    <p class="page-subtitle">{{ users|length }} total registered users</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-section glass-card">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <input type="text" class="form-control" placeholder="Search users..." id="searchUsers" onkeyup="filterUsers()">
+                </div>
+                <div class="filter-group">
+                    <select class="form-control" id="filterStatus" onchange="filterUsers()">
+                        <option value="">All Status</option>
+                        <option value="active">Active</option>
+                        <option value="inactive">Inactive</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Users Table -->
+        <div class="table-card glass-card">
+            <div class="table-responsive">
+                <table class="table admin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>User</th>
+                            <th>Email</th>
+                            <th>Location</th>
+                            <th>Status</th>
+                            <th>Joined</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if users %}
+                            {% for user in users %}
+                                <tr data-status="{% if user.is_active %}active{% else %}inactive{% endif %}">
+                                    <td>{{ loop.index }}</td>
+                                    <td>
+                                        <div class="user-info">
+                                            <div class="user-avatar">
+                                                {% if user.profile_photo %}
+                                                    <img src="{{ url_for('static', filename='uploads/profiles/' + user.profile_photo) }}" alt="{{ user.full_name }}">
+                                                {% else %}
+                                                    <div class="avatar-placeholder-sm">{{ user.full_name[0]|upper }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <span class="user-name">{{ user.full_name }}</span>
+                                        </div>
+                                    </td>
+                                    <td>{{ user.email }}</td>
+                                    <td>{{ user.location or 'N/A' }}</td>
+                                    <td>
+                                        <span class="status-badge {% if user.is_active %}status-active{% else %}status-inactive{% endif %}">
+                                            <i class="fas fa-{% if user.is_active %}check-circle{% else %}times-circle{% endif %}"></i>
+                                            {% if user.is_active %}Active{% else %}Inactive{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>{{ user.created_at.strftime('%b %d, %Y') if user.created_at else 'N/A' }}</td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <!-- EDIT BUTTON HATA DIYA - Sirf Toggle aur Delete -->
+                                            <button class="btn btn-sm {% if user.is_active %}btn-warning{% else %}btn-success{% endif %}" 
+                                                    onclick="toggleUserStatus({{ user.id }})">
+                                                <i class="fas fa-{% if user.is_active %}pause{% else %}play{% endif %}"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteUser({{ user.id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="empty-state-small">
+                                        <i class="fas fa-users"></i>
+                                        <p>No users registered yet</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.admin-page {
+    padding: 24px 0 60px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding: 24px 32px;
+    background: linear-gradient(135deg, rgba(108, 60, 225, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+    border-radius: 20px;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0;
+}
+
+.page-subtitle {
+    color: var(--text-secondary);
+    margin: 4px 0 0;
+}
+
+.filters-section {
+    padding: 20px 24px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+}
+
+.filters-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 180px;
+}
+
+.filter-group .form-control {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+}
+
+.table-card {
+    padding: 20px;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.admin-table {
+    margin: 0;
+}
+
+.admin-table thead th {
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 2px solid rgba(0, 0, 0, 0.04);
+    padding: 12px 16px;
+}
+
+.admin-table tbody td {
+    padding: 12px 16px;
+    vertical-align: middle;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.admin-table tbody tr:hover {
+    background: rgba(108, 60, 225, 0.02);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    overflow: hidden;
+}
+
+.user-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.user-name {
+    font-weight: 500;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.status-badge.status-active {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.status-badge.status-inactive {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+.action-buttons {
+    display: flex;
+    gap: 4px;
+}
+
+.action-buttons .btn {
+    padding: 4px 8px;
+    font-size: 12px;
+}
+
+.empty-state-small {
+    text-align: center;
+    padding: 40px 16px;
+}
+
+.empty-state-small i {
+    font-size: 40px;
+    color: var(--text-muted);
+    opacity: 0.3;
+}
+
+.empty-state-small p {
+    color: var(--text-muted);
+    margin: 8px 0 0;
+}
+
+body.dark-mode .filter-group .form-control {
+    background: #1e293b;
+    border-color: #334155;
+    color: white;
+}
+
+body.dark-mode .admin-table thead th {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .admin-table tbody td {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .admin-table tbody tr:hover {
+    background: rgba(255, 255, 255, 0.02);
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .header-content {
+        flex-direction: column;
+    }
+
+    .filters-row {
+        flex-direction: column;
+    }
+
+    .filter-group {
+        min-width: 100%;
+    }
+
+    .admin-table {
+        font-size: 13px;
+    }
+
+    .action-buttons {
+        flex-wrap: wrap;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterUsers() {
+    const search = document.getElementById('searchUsers').value.toLowerCase();
+    const status = document.getElementById('filterStatus').value;
+    const rows = document.querySelectorAll('.admin-table tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const rowStatus = row.dataset.status;
+        let show = true;
+        
+        if (search && !text.includes(search)) show = false;
+        if (status && rowStatus !== status) show = false;
+        
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+function toggleUserStatus(userId) {
+    if (!confirm('Are you sure you want to change this user\'s status?')) return;
+    
+    fetch(`/admin/user/${userId}/toggle`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    })
+    .catch(error => {
+        showToast('An error occurred. Please try again.', 'danger');
+    });
+}
+
+function deleteUser(userId) {
+    if (!confirm('Are you sure you want to delete this user? This action cannot be undone.')) return;
+    
+    fetch(`/admin/user/${userId}/delete`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    })
+    .catch(error => {
+        showToast('An error occurred. Please try again.', 'danger');
+    });
+}
+</script>
+{% endblock %}

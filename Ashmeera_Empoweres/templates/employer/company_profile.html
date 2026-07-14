@@ -1,0 +1,428 @@
+{% extends "base.html" %}
+
+{% block title %}Company Profile - Ashmeera Empowers{% endblock %}
+
+{% block content %}
+<div class="company-profile-page">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Sidebar -->
+            <div class="col-lg-4">
+                <div class="profile-card glass-card">
+                    <div class="profile-avatar-wrapper">
+                        {% if employer and employer.company_logo %}
+                            <img src="{{ url_for('static', filename='uploads/profiles/' + employer.company_logo) }}" 
+                                 alt="{{ employer.company_name }}" class="profile-avatar">
+                        {% else %}
+                            <div class="profile-avatar-placeholder">
+                                {{ employer.company_name[0]|upper if employer else 'C' }}
+                            </div>
+                        {% endif %}
+                        <button class="avatar-upload-btn" onclick="document.getElementById('companyLogo').click()">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                        <input type="file" id="companyLogo" accept="image/*" style="display: none;" form="profileForm">
+                    </div>
+                    
+                    <h3 class="profile-name">{{ employer.company_name if employer else 'Company Name' }}</h3>
+                    <p class="profile-role">
+                        <span class="badge {% if employer and employer.is_verified %}bg-success{% else %}bg-warning{% endif %}">
+                            {% if employer and employer.is_verified %}
+                                <i class="fas fa-check-circle"></i> Verified
+                            {% else %}
+                                <i class="fas fa-clock"></i> Pending Verification
+                            {% endif %}
+                        </span>
+                    </p>
+                    
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">{{ employer.jobs|length if employer else 0 }}</span>
+                            <span class="stat-label">Total Jobs</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ employer.jobs|selectattr('is_active')|list|length if employer else 0 }}</span>
+                            <span class="stat-label">Active Jobs</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-value">{{ employer.industry or 'N/A' }}</span>
+                            <span class="stat-label">Industry</span>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-menu">
+                        <a href="{{ url_for('employer_dashboard') }}" class="menu-item">
+                            <i class="fas fa-chart-line"></i> Dashboard
+                        </a>
+                        <a href="{{ url_for('employer_profile') }}" class="menu-item active">
+                            <i class="fas fa-building"></i> Company Profile
+                        </a>
+                        <a href="{{ url_for('post_job') }}" class="menu-item">
+                            <i class="fas fa-plus-circle"></i> Post a Job
+                        </a>
+                        <a href="{{ url_for('employer_jobs') }}" class="menu-item">
+                            <i class="fas fa-briefcase"></i> Manage Jobs
+                        </a>
+                        <a href="{{ url_for('employer_applicants') }}" class="menu-item">
+                            <i class="fas fa-users"></i> Applicants
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Edit Form -->
+            <div class="col-lg-8">
+                <div class="profile-edit-card glass-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-building" style="color: var(--primary-color);"></i> Company Profile</h3>
+                        <p class="card-subtitle">Update your company information</p>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('employer_profile') }}" enctype="multipart/form-data" id="profileForm">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="company_name"><i class="fas fa-building"></i> Company Name *</label>
+                                    <input type="text" id="company_name" name="company_name" class="form-control" 
+                                           value="{{ employer.company_name if employer else '' }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="industry"><i class="fas fa-industry"></i> Industry</label>
+                                    <select id="industry" name="industry" class="form-control">
+                                        <option value="">Select Industry</option>
+                                        <option value="Technology" {% if employer and employer.industry == 'Technology' %}selected{% endif %}>Technology</option>
+                                        <option value="Healthcare" {% if employer and employer.industry == 'Healthcare' %}selected{% endif %}>Healthcare</option>
+                                        <option value="Education" {% if employer and employer.industry == 'Education' %}selected{% endif %}>Education</option>
+                                        <option value="Finance" {% if employer and employer.industry == 'Finance' %}selected{% endif %}>Finance</option>
+                                        <option value="Retail" {% if employer and employer.industry == 'Retail' %}selected{% endif %}>Retail</option>
+                                        <option value="Manufacturing" {% if employer and employer.industry == 'Manufacturing' %}selected{% endif %}>Manufacturing</option>
+                                        <option value="Media" {% if employer and employer.industry == 'Media' %}selected{% endif %}>Media</option>
+                                        <option value="Real Estate" {% if employer and employer.industry == 'Real Estate' %}selected{% endif %}>Real Estate</option>
+                                        <option value="Other" {% if employer and employer.industry == 'Other' %}selected{% endif %}>Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="company_description"><i class="fas fa-info-circle"></i> Company Description</label>
+                            <textarea id="company_description" name="company_description" class="form-control" rows="4" 
+                                      placeholder="Tell candidates about your company, mission, and culture">{{ employer.company_description if employer else '' }}</textarea>
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="company_website"><i class="fas fa-globe"></i> Website</label>
+                                    <input type="url" id="company_website" name="company_website" class="form-control" 
+                                           value="{{ employer.company_website if employer else '' }}" placeholder="https://example.com">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="company_size"><i class="fas fa-users"></i> Company Size</label>
+                                    <select id="company_size" name="company_size" class="form-control">
+                                        <option value="">Select Size</option>
+                                        <option value="1-10" {% if employer and employer.company_size == '1-10' %}selected{% endif %}>1-10 employees</option>
+                                        <option value="11-50" {% if employer and employer.company_size == '11-50' %}selected{% endif %}>11-50 employees</option>
+                                        <option value="51-200" {% if employer and employer.company_size == '51-200' %}selected{% endif %}>51-200 employees</option>
+                                        <option value="201-500" {% if employer and employer.company_size == '201-500' %}selected{% endif %}>201-500 employees</option>
+                                        <option value="501-1000" {% if employer and employer.company_size == '501-1000' %}selected{% endif %}>501-1000 employees</option>
+                                        <option value="1000+" {% if employer and employer.company_size == '1000+' %}selected{% endif %}>1000+ employees</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="headquarters"><i class="fas fa-map-pin"></i> Headquarters</label>
+                            <input type="text" id="headquarters" name="headquarters" class="form-control" 
+                                   value="{{ employer.headquarters if employer else '' }}" placeholder="City, Country">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-upload"></i> Company Logo</label>
+                            <div class="upload-box" onclick="document.getElementById('companyLogo').click()">
+                                <div class="upload-icon">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                                <div class="upload-info">
+                                    <p class="upload-title">Upload Logo</p>
+                                    <p class="upload-subtitle">
+                                        {% if employer and employer.company_logo %}
+                                            <i class="fas fa-check-circle text-success"></i> Logo uploaded
+                                        {% else %}
+                                            Click to upload (JPG, PNG)
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-save">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.company-profile-page {
+    padding: 24px 0 60px;
+}
+
+.profile-card {
+    padding: 32px 24px;
+    border-radius: 20px;
+    text-align: center;
+}
+
+.profile-avatar-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 16px;
+}
+
+.profile-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--primary-color);
+}
+
+.profile-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 700;
+    border: 4px solid var(--primary-color);
+}
+
+.avatar-upload-btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    color: white;
+    border: 3px solid white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.avatar-upload-btn:hover {
+    transform: scale(1.1);
+}
+
+.profile-name {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.profile-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    padding: 16px 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    margin: 16px 0;
+}
+
+.profile-stats .stat-value {
+    display: block;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.profile-stats .stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.profile-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: left;
+}
+
+.menu-item {
+    padding: 10px 16px;
+    border-radius: 10px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.menu-item:hover {
+    background: rgba(108, 60, 225, 0.05);
+    color: var(--text-primary);
+}
+
+.menu-item.active {
+    background: rgba(108, 60, 225, 0.1);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.menu-item i {
+    width: 20px;
+}
+
+.profile-edit-card {
+    padding: 32px;
+    border-radius: 20px;
+}
+
+.card-header {
+    margin-bottom: 24px;
+}
+
+.card-header h3 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.card-subtitle {
+    color: var(--text-secondary);
+    margin: 4px 0 0;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    font-weight: 500;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.form-group label i {
+    color: var(--primary-color);
+}
+
+.form-control {
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(108, 60, 225, 0.1);
+}
+
+.upload-box {
+    border: 2px dashed #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-box:hover {
+    border-color: var(--primary-color);
+    background: rgba(108, 60, 225, 0.03);
+}
+
+.upload-icon {
+    font-size: 32px;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.upload-title {
+    font-weight: 600;
+    margin: 0;
+}
+
+.upload-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0 0;
+}
+
+.btn-save {
+    margin-top: 16px;
+    padding: 12px 32px;
+    font-weight: 600;
+    border-radius: 12px;
+    background: var(--gradient-primary);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(108, 60, 225, 0.3);
+    color: white;
+}
+
+/* Dark Mode */
+body.dark-mode .profile-stats {
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .upload-box {
+    border-color: #334155;
+}
+
+body.dark-mode .upload-box:hover {
+    border-color: var(--primary-color);
+}
+
+body.dark-mode .menu-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .profile-edit-card {
+        padding: 20px;
+    }
+
+    .profile-stats {
+        grid-template-columns: 1fr;
+        gap: 4px;
+    }
+
+    .profile-stats .stat-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 4px 0;
+    }
+}
+</style>
+{% endblock %}

@@ -1,0 +1,609 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - Ashmeera Empowers{% endblock %}
+
+{% block content %}
+<div class="profile-page">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Profile Sidebar -->
+            <div class="col-lg-4">
+                <div class="profile-card glass-card">
+                    <div class="profile-avatar-wrapper">
+                        {% if current_user.profile_photo %}
+                            <img src="{{ url_for('static', filename='uploads/profiles/' + current_user.profile_photo) }}" 
+                                 alt="{{ current_user.full_name }}" class="profile-avatar"
+                                 onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">
+                            <div class="profile-avatar-placeholder" style="display:none;">
+                                {{ current_user.full_name[0]|upper }}
+                            </div>
+                        {% else %}
+                            <div class="profile-avatar-placeholder">
+                                {{ current_user.full_name[0]|upper }}
+                            </div>
+                        {% endif %}
+                        <button class="avatar-upload-btn" onclick="document.getElementById('profilePhoto').click()">
+                            <i class="fas fa-camera"></i>
+                        </button>
+                        <input type="file" id="profilePhoto" accept="image/*" style="display: none;">
+                    </div>
+                    
+                    <h3 class="profile-name">{{ current_user.full_name }}</h3>
+                    <p class="profile-email">{{ current_user.email }}</p>
+                    <p class="profile-role">
+                        <span class="badge bg-primary">{{ current_user.user_type|capitalize }}</span>
+                    </p>
+                    
+                    <div class="profile-stats">
+                        <div class="stat-item">
+                            <span class="stat-value">{{ current_user.profile_completion }}%</span>
+                            <span class="stat-label">Profile Complete</span>
+                        </div>
+                    </div>
+                    
+                    <div class="profile-menu">
+                        <a href="{{ url_for('user_dashboard') }}" class="menu-item">
+                            <i class="fas fa-chart-line"></i> Dashboard
+                        </a>
+                        <a href="{{ url_for('user_profile') }}" class="menu-item active">
+                            <i class="fas fa-user-edit"></i> Edit Profile
+                        </a>
+                        <a href="{{ url_for('user_applications') }}" class="menu-item">
+                            <i class="fas fa-file-alt"></i> Applications
+                        </a>
+                        <a href="{{ url_for('user_notifications') }}" class="menu-item">
+                            <i class="fas fa-bell"></i> Notifications
+                        </a>
+                        <a href="{{ url_for('logout') }}" class="menu-item text-danger">
+                            <i class="fas fa-sign-out-alt"></i> Logout
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Edit Form -->
+            <div class="col-lg-8">
+                <div class="profile-edit-card glass-card">
+                    <div class="card-header">
+                        <h3><i class="fas fa-user-edit" style="color: var(--primary-color);"></i> Edit Profile</h3>
+                        <p class="card-subtitle">Update your personal information and preferences</p>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('user_profile') }}" enctype="multipart/form-data">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="full_name"><i class="fas fa-user"></i> Full Name</label>
+                                    <input type="text" id="full_name" name="full_name" class="form-control" 
+                                           value="{{ current_user.full_name }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="phone"><i class="fas fa-phone"></i> Phone Number</label>
+                                    <input type="tel" id="phone" name="phone" class="form-control" 
+                                           value="{{ current_user.phone or '' }}">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="bio"><i class="fas fa-info-circle"></i> Bio</label>
+                            <textarea id="bio" name="bio" class="form-control" rows="3" 
+                                      placeholder="Tell us about yourself">{{ current_user.bio or '' }}</textarea>
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="location"><i class="fas fa-map-marker-alt"></i> Location</label>
+                                    <input type="text" id="location" name="location" class="form-control" 
+                                           value="{{ current_user.location or '' }}" placeholder="City, State">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="disability_type"><i class="fas fa-heart"></i> Disability Type</label>
+                                    <select id="disability_type" name="disability_type" class="form-control">
+                                        <option value="">Prefer not to say</option>
+                                        <option value="Physical" {% if current_user.disability_type == 'Physical' %}selected{% endif %}>Physical</option>
+                                        <option value="Visual" {% if current_user.disability_type == 'Visual' %}selected{% endif %}>Visual</option>
+                                        <option value="Hearing" {% if current_user.disability_type == 'Hearing' %}selected{% endif %}>Hearing</option>
+                                        <option value="Speech" {% if current_user.disability_type == 'Speech' %}selected{% endif %}>Speech</option>
+                                        <option value="Cognitive" {% if current_user.disability_type == 'Cognitive' %}selected{% endif %}>Cognitive</option>
+                                        <option value="Other" {% if current_user.disability_type == 'Other' %}selected{% endif %}>Other</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="skills"><i class="fas fa-code"></i> Skills</label>
+                            <input type="text" id="skills" name="skills" class="form-control" 
+                                   value="{{ current_user.skills or '' }}" 
+                                   placeholder="e.g., Python, JavaScript, HTML, CSS (comma separated)">
+                            <small class="text-muted">Enter skills separated by commas</small>
+                        </div>
+                        
+                        <h5 class="mt-4 mb-3"><i class="fas fa-briefcase" style="color: var(--primary-color);"></i> Job Preferences</h5>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="preferred_job_type"><i class="fas fa-clock"></i> Preferred Job Type</label>
+                                    <select id="preferred_job_type" name="preferred_job_type" class="form-control">
+                                        <option value="">Any</option>
+                                        <option value="Full-time" {% if current_user.preferred_job_type == 'Full-time' %}selected{% endif %}>Full-time</option>
+                                        <option value="Part-time" {% if current_user.preferred_job_type == 'Part-time' %}selected{% endif %}>Part-time</option>
+                                        <option value="Contract" {% if current_user.preferred_job_type == 'Contract' %}selected{% endif %}>Contract</option>
+                                        <option value="Internship" {% if current_user.preferred_job_type == 'Internship' %}selected{% endif %}>Internship</option>
+                                        <option value="Freelance" {% if current_user.preferred_job_type == 'Freelance' %}selected{% endif %}>Freelance</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="preferred_location"><i class="fas fa-map-pin"></i> Preferred Location</label>
+                                    <input type="text" id="preferred_location" name="preferred_location" class="form-control" 
+                                           value="{{ current_user.preferred_location or '' }}" placeholder="City, State">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="expected_salary_min"><i class="fas fa-rupee-sign"></i> Expected Salary (Min)</label>
+                                    <input type="number" id="expected_salary_min" name="expected_salary_min" class="form-control" 
+                                           value="{{ current_user.expected_salary_min or '' }}" placeholder="500000">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="expected_salary_max"><i class="fas fa-rupee-sign"></i> Expected Salary (Max)</label>
+                                    <input type="number" id="expected_salary_max" name="expected_salary_max" class="form-control" 
+                                           value="{{ current_user.expected_salary_max or '' }}" placeholder="1500000">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" id="work_from_home" name="work_from_home" class="form-check-input"
+                                       {% if current_user.work_from_home %}checked{% endif %}>
+                                <label for="work_from_home" class="form-check-label">
+                                    <i class="fas fa-home"></i> I prefer to work from home
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Security Section -->
+                        <h5 class="mt-4 mb-3"><i class="fas fa-shield-alt" style="color: var(--primary-color);"></i> Security Settings</h5>
+                        <p class="text-muted small mb-3">Set a security question to recover your password if you forget it.</p>
+
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="security_question"><i class="fas fa-question-circle"></i> Security Question</label>
+                                    <select id="security_question" name="security_question" class="form-control">
+                                        <option value="">Select a security question</option>
+                                        <option value="What is your mother's maiden name?" {% if current_user.security_question == "What is your mother's maiden name?" %}selected{% endif %}>
+                                            What is your mother's maiden name?
+                                        </option>
+                                        <option value="What is the name of your first pet?" {% if current_user.security_question == "What is the name of your first pet?" %}selected{% endif %}>
+                                            What is the name of your first pet?
+                                        </option>
+                                        <option value="What is your favorite book?" {% if current_user.security_question == "What is your favorite book?" %}selected{% endif %}>
+                                            What is your favorite book?
+                                        </option>
+                                        <option value="What is your birthplace?" {% if current_user.security_question == "What is your birthplace?" %}selected{% endif %}>
+                                            What is your birthplace?
+                                        </option>
+                                        <option value="What was your first school?" {% if current_user.security_question == "What was your first school?" %}selected{% endif %}>
+                                            What was your first school?
+                                        </option>
+                                        <option value="What is your favorite movie?" {% if current_user.security_question == "What is your favorite movie?" %}selected{% endif %}>
+                                            What is your favorite movie?
+                                        </option>
+                                        <option value="What is your favorite color?" {% if current_user.security_question == "What is your favorite color?" %}selected{% endif %}>
+                                            What is your favorite color?
+                                        </option>
+                                        <option value="What is your favorite food?" {% if current_user.security_question == "What is your favorite food?" %}selected{% endif %}>
+                                            What is your favorite food?
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="security_answer"><i class="fas fa-pen"></i> Security Answer</label>
+                                    <input type="text" id="security_answer" name="security_answer" class="form-control" 
+                                           value="{{ current_user.security_answer or '' }}" 
+                                           placeholder="Enter your security answer">
+                                    <small class="text-muted">This will be used to reset your password if you forget it.</small>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <h5 class="mt-4 mb-3"><i class="fas fa-upload" style="color: var(--primary-color);"></i> Upload Documents</h5>
+                        
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="upload-box" onclick="document.getElementById('resumeUpload').click()">
+                                    <div class="upload-icon">
+                                        <i class="fas fa-file-pdf"></i>
+                                    </div>
+                                    <div class="upload-info">
+                                        <p class="upload-title">Upload Resume</p>
+                                        <p class="upload-subtitle">
+                                            {% if current_user.resume %}
+                                                <i class="fas fa-check-circle text-success"></i> {{ current_user.resume }}
+                                            {% else %}
+                                                Click to upload (PDF, DOC)
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <input type="file" id="resumeUpload" name="resume" accept=".pdf,.doc,.docx" style="display: none;" onchange="this.closest('form').submit()">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="upload-box" onclick="document.getElementById('profilePhotoUpload').click()">
+                                    <div class="upload-icon">
+                                        <i class="fas fa-camera"></i>
+                                    </div>
+                                    <div class="upload-info">
+                                        <p class="upload-title">Profile Photo</p>
+                                        <p class="upload-subtitle">
+                                            {% if current_user.profile_photo %}
+                                                <i class="fas fa-check-circle text-success"></i> Uploaded
+                                            {% else %}
+                                                Click to upload (JPG, PNG)
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <input type="file" id="profilePhotoUpload" name="profile_photo" accept="image/*" style="display: none;" onchange="this.closest('form').submit()">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-save">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.profile-page {
+    padding: 24px 0 60px;
+}
+
+.profile-card {
+    padding: 32px 24px;
+    border-radius: 20px;
+    text-align: center;
+}
+
+.profile-avatar-wrapper {
+    position: relative;
+    width: 120px;
+    height: 120px;
+    margin: 0 auto 16px;
+}
+
+.profile-avatar {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--primary-color);
+}
+
+.profile-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 48px;
+    font-weight: 700;
+    border: 4px solid var(--primary-color);
+}
+
+.avatar-upload-btn {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    color: white;
+    border: 3px solid white;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.avatar-upload-btn:hover {
+    transform: scale(1.1);
+}
+
+.profile-name {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.profile-email {
+    color: var(--text-secondary);
+    font-size: 14px;
+    margin: 4px 0 8px;
+}
+
+.profile-stats {
+    padding: 16px 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    margin: 16px 0;
+}
+
+.profile-stats .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    display: block;
+}
+
+.profile-stats .stat-label {
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.profile-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    text-align: left;
+}
+
+.menu-item {
+    padding: 10px 16px;
+    border-radius: 10px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.menu-item:hover {
+    background: rgba(108, 60, 225, 0.05);
+    color: var(--text-primary);
+}
+
+.menu-item.active {
+    background: rgba(108, 60, 225, 0.1);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.menu-item i {
+    width: 20px;
+}
+
+.profile-edit-card {
+    padding: 32px;
+    border-radius: 20px;
+}
+
+.card-header {
+    margin-bottom: 24px;
+}
+
+.card-header h3 {
+    font-size: 24px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.card-subtitle {
+    color: var(--text-secondary);
+    margin: 4px 0 0;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    font-weight: 500;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.form-group label i {
+    color: var(--primary-color);
+}
+
+.form-control {
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(108, 60, 225, 0.1);
+}
+
+.form-check {
+    padding-left: 32px;
+}
+
+.form-check-input {
+    width: 18px;
+    height: 18px;
+    margin-left: -32px;
+    margin-top: 4px;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.upload-box {
+    border: 2px dashed #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-box:hover {
+    border-color: var(--primary-color);
+    background: rgba(108, 60, 225, 0.03);
+}
+
+.upload-icon {
+    font-size: 32px;
+    color: var(--primary-color);
+    margin-bottom: 8px;
+}
+
+.upload-title {
+    font-weight: 600;
+    margin: 0;
+}
+
+.upload-subtitle {
+    font-size: 13px;
+    color: var(--text-muted);
+    margin: 4px 0 0;
+}
+
+.btn-save {
+    margin-top: 24px;
+    padding: 12px 32px;
+    font-weight: 600;
+    border-radius: 12px;
+    background: var(--gradient-primary);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+}
+
+.btn-save:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(108, 60, 225, 0.3);
+    color: white;
+}
+
+/* Dark Mode */
+body.dark-mode .profile-menu .menu-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .upload-box {
+    border-color: #334155;
+}
+
+body.dark-mode .upload-box:hover {
+    border-color: var(--primary-color);
+}
+
+body.dark-mode .profile-stats {
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .form-control {
+    background: #1e293b;
+    border-color: #334155;
+    color: white;
+}
+
+body.dark-mode .form-control:focus {
+    background: #1e293b;
+}
+
+@media (max-width: 768px) {
+    .profile-edit-card {
+        padding: 20px;
+    }
+    
+    .upload-box {
+        padding: 16px;
+    }
+}
+
+@media (max-width: 576px) {
+    .profile-card {
+        padding: 20px 16px;
+    }
+    
+    .profile-avatar-wrapper {
+        width: 100px;
+        height: 100px;
+    }
+    
+    .profile-avatar-placeholder {
+        font-size: 36px;
+    }
+    
+    .profile-name {
+        font-size: 18px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Auto upload on file select
+document.getElementById('profilePhotoUpload').addEventListener('change', function() {
+    if (this.files[0]) {
+        this.closest('form').submit();
+    }
+});
+
+document.getElementById('resumeUpload').addEventListener('change', function() {
+    if (this.files[0]) {
+        this.closest('form').submit();
+    }
+});
+
+// Profile photo click
+document.getElementById('profilePhoto').addEventListener('change', function() {
+    if (this.files[0]) {
+        const formData = new FormData();
+        formData.append('profile_photo', this.files[0]);
+        
+        fetch('{{ url_for("user_profile") }}', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                location.reload();
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

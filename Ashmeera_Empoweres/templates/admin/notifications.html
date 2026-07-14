@@ -1,0 +1,787 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Admin{% endblock %}
+
+{% block content %}
+<!-- Admin Permission Check -->
+{% if current_user.user_type != 'admin' %}
+    <script>
+        window.location.href = "{{ url_for('dashboard') }}";
+    </script>
+{% endif %}
+
+<div class="notifications-page">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <div class="header-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div>
+                    <h1 class="page-title">Notifications</h1>
+                    <p class="page-subtitle">System notifications and updates</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <span class="unread-count">
+                    <i class="fas fa-circle text-primary"></i>
+                    {{ notifications|selectattr('is_read', 'equalto', False)|list|length }} unread
+                </span>
+                {% if notifications %}
+                    <button class="btn btn-sm btn-outline-primary" onclick="markAllRead()">
+                        <i class="fas fa-check-double"></i> Mark All Read
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Notifications List -->
+        {% if notifications %}
+            <div class="notifications-list">
+                {% for notif in notifications %}
+                    <div class="notification-item glass-card {% if not notif.is_read %}unread{% endif %}" 
+                         data-notif-id="{{ notif.id }}">
+                        <div class="notification-icon type-{{ notif.type }}">
+                            <i class="fas fa-{% if notif.type == 'success' %}check-circle{% elif notif.type == 'warning' %}exclamation-triangle{% elif notif.type == 'error' %}times-circle{% else %}info-circle{% endif %}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-header">
+                                <h4 class="notification-title">{{ notif.title }}</h4>
+                                <span class="notification-time">{{ notif.created_at.strftime('%b %d, %Y at %I:%M %p') }}</span>
+                            </div>
+                            <p class="notification-message">{{ notif.message }}</p>
+                            {% if notif.link %}
+                                <a href="{{ notif.link }}" class="notification-link">
+                                    <i class="fas fa-arrow-right"></i> View Details
+                                </a>
+                            {% endif %}
+                        </div>
+                        <button class="notification-dismiss" onclick="dismissNotification({{ notif.id }})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state glass-card">
+                <div class="empty-content">
+                    <i class="fas fa-bell-slash"></i>
+                    <h3>No Notifications</h3>
+                    <p>You're all caught up! System notifications will appear here.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.notifications-page {
+    padding: 24px 0 60px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding: 24px 32px;
+    background: linear-gradient(135deg, rgba(108, 60, 225, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+    border-radius: 20px;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0;
+}
+
+.page-subtitle {
+    color: var(--text-secondary);
+    margin: 4px 0 0;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.unread-count {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.unread-count i {
+    font-size: 10px;
+    margin-right: 4px;
+}
+
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 24px;
+    border-radius: 16px;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.notification-item.unread {
+    border-left: 4px solid var(--primary-color);
+    background: rgba(108, 60, 225, 0.03);
+}
+
+.notification-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.notification-icon.type-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.notification-icon.type-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #F59E0B;
+}
+
+.notification-icon.type-error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+.notification-icon.type-info {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3B82F6;
+}
+
+.notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.notification-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.notification-time {
+    font-size: 12px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+.notification-message {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 4px 0 0;
+    line-height: 1.6;
+}
+
+.notification-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.notification-link:hover {
+    gap: 10px;
+    color: var(--primary-dark);
+}
+
+.notification-dismiss {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.notification-dismiss:hover {
+    color: #EF4444;
+    transform: scale(1.1);
+}
+
+.empty-state {
+    padding: 60px 40px;
+    text-align: center;
+    border-radius: 20px;
+}
+
+.empty-content i {
+    font-size: 64px;
+    color: var(--text-muted);
+    opacity: 0.3;
+    margin-bottom: 16px;
+}
+
+.empty-content h3 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.empty-content p {
+    color: var(--text-secondary);
+}
+
+body.dark-mode .page-header {
+    background: linear-gradient(135deg, rgba(108, 60, 225, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+}
+
+body.dark-mode .notification-item.unread {
+    background: rgba(108, 60, 225, 0.06);
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+        padding: 20px;
+    }
+    
+    .header-content {
+        flex-direction: column;
+    }
+    
+    .header-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .notification-item {
+        padding: 16px;
+        flex-wrap: wrap;
+    }
+    
+    .notification-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .notification-time {
+        margin-left: 0;
+    }
+    
+    .notification-dismiss {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .page-title {
+        font-size: 22px;
+    }
+    
+    .notification-title {
+        font-size: 14px;
+    }
+    
+    .notification-message {
+        font-size: 13px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function markAllRead() {
+    fetch('/api/admin/notifications/mark-all-read', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.querySelectorAll('.notification-item').forEach(item => {
+                item.classList.remove('unread');
+            });
+            document.querySelector('.unread-count').innerHTML = 
+                '<i class="fas fa-circle text-primary"></i> 0 unread';
+            showToast('All notifications marked as read', 'success');
+        }
+    })
+    .catch(error => {
+        showToast('An error occurred. Please try again.', 'danger');
+    });
+}
+
+function dismissNotification(notifId) {
+    if (!confirm('Dismiss this notification?')) return;
+    
+    fetch(`/api/admin/notifications/${notifId}/dismiss`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const item = document.querySelector(`[data-notif-id="${notifId}"]`);
+            if (item) {
+                item.style.opacity = '0';
+                item.style.transform = 'translateX(50px)';
+                setTimeout(() => item.remove(), 300);
+            }
+            showToast('Notification dismissed', 'info');
+        }
+    })
+    .catch(error => {
+        showToast('An error occurred. Please try again.', 'danger');
+    });
+}
+</script>
+{% endblock %}{% extends "base.html" %}
+
+{% block title %}Notifications - Admin{% endblock %}
+
+{% block content %}
+<!-- Admin Permission Check -->
+{% if current_user.user_type != 'admin' %}
+    <script>
+        window.location.href = "{{ url_for('dashboard') }}";
+    </script>
+{% endif %}
+
+<div class="notifications-page">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <div class="header-icon">
+                    <i class="fas fa-bell"></i>
+                </div>
+                <div>
+                    <h1 class="page-title">Notifications</h1>
+                    <p class="page-subtitle">System notifications and updates</p>
+                </div>
+            </div>
+            <div class="header-actions">
+                <span class="unread-count">
+                    <i class="fas fa-circle text-primary"></i>
+                    {{ notifications|selectattr('is_read', 'equalto', False)|list|length }} unread
+                </span>
+                {% if notifications %}
+                    <button class="btn btn-sm btn-outline-primary" onclick="markAllRead()">
+                        <i class="fas fa-check-double"></i> Mark All Read
+                    </button>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Notifications List -->
+        {% if notifications %}
+            <div class="notifications-list">
+                {% for notif in notifications %}
+                    <div class="notification-item glass-card {% if not notif.is_read %}unread{% endif %}" 
+                         data-notif-id="{{ notif.id }}">
+                        <div class="notification-icon type-{{ notif.type }}">
+                            <i class="fas fa-{% if notif.type == 'success' %}check-circle{% elif notif.type == 'warning' %}exclamation-triangle{% elif notif.type == 'error' %}times-circle{% else %}info-circle{% endif %}"></i>
+                        </div>
+                        <div class="notification-content">
+                            <div class="notification-header">
+                                <h4 class="notification-title">{{ notif.title }}</h4>
+                                <span class="notification-time">{{ notif.created_at.strftime('%b %d, %Y at %I:%M %p') }}</span>
+                            </div>
+                            <p class="notification-message">{{ notif.message }}</p>
+                            {% if notif.link %}
+                                <a href="{{ notif.link }}" class="notification-link">
+                                    <i class="fas fa-arrow-right"></i> View Details
+                                </a>
+                            {% endif %}
+                        </div>
+                        <button class="notification-dismiss" onclick="dismissNotification({{ notif.id }})">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state glass-card">
+                <div class="empty-content">
+                    <i class="fas fa-bell-slash"></i>
+                    <h3>No Notifications</h3>
+                    <p>You're all caught up! System notifications will appear here.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.notifications-page {
+    padding: 24px 0 60px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding: 24px 32px;
+    background: linear-gradient(135deg, rgba(108, 60, 225, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+    border-radius: 20px;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0;
+}
+
+.page-subtitle {
+    color: var(--text-secondary);
+    margin: 4px 0 0;
+}
+
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.unread-count {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.unread-count i {
+    font-size: 10px;
+    margin-right: 4px;
+}
+
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 20px 24px;
+    border-radius: 16px;
+    margin-bottom: 12px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.notification-item.unread {
+    border-left: 4px solid var(--primary-color);
+    background: rgba(108, 60, 225, 0.03);
+}
+
+.notification-item:hover {
+    transform: translateX(4px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+}
+
+.notification-icon.type-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.notification-icon.type-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #F59E0B;
+}
+
+.notification-icon.type-error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+.notification-icon.type-info {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3B82F6;
+}
+
+.notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.notification-title {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.notification-time {
+    font-size: 12px;
+    color: var(--text-muted);
+    flex-shrink: 0;
+    margin-left: 12px;
+}
+
+.notification-message {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 4px 0 0;
+    line-height: 1.6;
+}
+
+.notification-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--primary-color);
+    text-decoration: none;
+    transition: all 0.3s ease;
+}
+
+.notification-link:hover {
+    gap: 10px;
+    color: var(--primary-dark);
+}
+
+.notification-dismiss {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.notification-dismiss:hover {
+    color: #EF4444;
+    transform: scale(1.1);
+}
+
+.empty-state {
+    padding: 60px 40px;
+    text-align: center;
+    border-radius: 20px;
+}
+
+.empty-content i {
+    font-size: 64px;
+    color: var(--text-muted);
+    opacity: 0.3;
+    margin-bottom: 16px;
+}
+
+.empty-content h3 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.empty-content p {
+    color: var(--text-secondary);
+}
+
+body.dark-mode .page-header {
+    background: linear-gradient(135deg, rgba(108, 60, 225, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+}
+
+body.dark-mode .notification-item.unread {
+    background: rgba(108, 60, 225, 0.06);
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+        padding: 20px;
+    }
+    
+    .header-content {
+        flex-direction: column;
+    }
+    
+    .header-actions {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+    
+    .notification-item {
+        padding: 16px;
+        flex-wrap: wrap;
+    }
+    
+    .notification-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+    
+    .notification-time {
+        margin-left: 0;
+    }
+    
+    .notification-dismiss {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+    }
+}
+
+@media (max-width: 576px) {
+    .page-title {
+        font-size: 22px;
+    }
+    
+    .notification-title {
+        font-size: 14px;
+    }
+    
+    .notification-message {
+        font-size: 13px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function markAllRead() {
+    fetch('/api/admin/notifications/mark-all-read', {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            document.querySelectorAll('.notification-item').forEach(item => {
+                item.classList.remove('unread');
+            });
+            document.querySelector('.unread-count').innerHTML = 
+                '<i class="fas fa-circle text-primary"></i> 0 unread';
+            showToast('All notifications marked as read', 'success');
+        }
+    })
+    .catch(error => {
+        showToast('An error occurred. Please try again.', 'danger');
+    });
+}
+
+function dismissNotification(notifId) {
+    if (!confirm('Dismiss this notification?')) return;
+    
+    fetch(`/api/admin/notifications/${notifId}/dismiss`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const item = document.querySelector(`[data-notif-id="${notifId}"]`);
+            if (item) {
+                item.style.opacity = '0';
+                item.style.transform = 'translateX(50px)';
+                setTimeout(() => item.remove(), 300);
+            }
+            showToast('Notification dismissed', 'info');
+        }
+    })
+    .catch(error => {
+        showToast('An error occurred. Please try again.', 'danger');
+    });
+}
+</script>
+{% endblock %}

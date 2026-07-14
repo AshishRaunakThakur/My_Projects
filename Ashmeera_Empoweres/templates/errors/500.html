@@ -1,0 +1,130 @@
+{% extends "base.html" %}
+
+{% block title %}Server Error - Ashmeera Empowers{% endblock %}
+
+{% block content %}
+<div class="error-page error-500">
+    <div class="container">
+        <div class="row justify-content-center align-items-center min-vh-100">
+            <div class="col-lg-6 col-md-8 text-center">
+                <div class="error-content">
+                    <div class="error-animation">
+                        <div class="error-circle error-500-circle">
+                            <i class="fas fa-cogs"></i>
+                        </div>
+                    </div>
+                    
+                    <h1 class="error-title">Something Went Wrong</h1>
+                    <p class="error-description">
+                        We're experiencing technical difficulties. Our team has been notified
+                        and is working on a fix. Please try again in a few minutes.
+                    </p>
+                    
+                    <div class="error-actions">
+                        <a href="{{ url_for('index') }}" class="btn btn-primary btn-error">
+                            <i class="fas fa-home"></i> Back to Home
+                        </a>
+                        <button class="btn btn-outline-primary btn-error" onclick="location.reload()">
+                            <i class="fas fa-sync"></i> Try Again
+                        </button>
+                    </div>
+                    
+                    <div class="error-help">
+                        <p>If the problem persists, <a href="#" class="text-primary">contact support</a></p>
+                    </div>
+
+                    <div class="error-tips">
+                        <div class="tip-item">
+                            <i class="fas fa-wifi"></i>
+                            <span>Check your internet connection</span>
+                        </div>
+                        <div class="tip-item">
+                            <i class="fas fa-browser"></i>
+                            <span>Clear your browser cache</span>
+                        </div>
+                        <div class="tip-item">
+                            <i class="fas fa-clock"></i>
+                            <span>Wait a few minutes and try again</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.error-500 .error-500-circle {
+    background: linear-gradient(135deg, #EF4444, #F59E0B);
+}
+
+.error-500 .error-500-circle i {
+    font-size: 64px;
+    color: white;
+    animation: spin 4s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.error-tips {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 32px;
+    padding-top: 32px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.tip-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 16px 12px;
+    background: var(--bg-secondary);
+    border-radius: 12px;
+}
+
+.tip-item i {
+    font-size: 24px;
+    color: var(--primary-color);
+}
+
+.tip-item span {
+    font-size: 13px;
+    color: var(--text-secondary);
+    text-align: center;
+}
+
+/* Dark Mode */
+body.dark-mode .error-tips {
+    border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .tip-item {
+    background: #1e293b;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .error-tips {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+    .error-500 .error-500-circle {
+        width: 140px;
+        height: 140px;
+    }
+
+    .error-500 .error-500-circle i {
+        font-size: 48px;
+    }
+}
+</style>
+{% endblock %}

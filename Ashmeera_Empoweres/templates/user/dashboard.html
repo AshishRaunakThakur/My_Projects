@@ -1,0 +1,730 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Ashmeera Empowers{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <div class="container">
+        <!-- Welcome Section -->
+        <div class="welcome-section glass-card">
+            <div class="row align-items-center">
+                <div class="col-md-8">
+                    <div class="welcome-content">
+                        <div class="welcome-badge">
+                            <i class="fas fa-sparkles"></i>
+                            Welcome back!
+                        </div>
+                        <h1 class="welcome-title">
+                            Hello, {{ current_user.full_name }}! 👋
+                        </h1>
+                        <p class="welcome-subtitle">
+                            Here's what's happening with your job search today.
+                        </p>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <div class="profile-completion">
+                        <div class="completion-circle">
+                            <svg viewBox="0 0 36 36">
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none"
+                                      stroke="#e2e8f0"
+                                      stroke-width="3"
+                                      stroke-dasharray="100, 100" />
+                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                      fill="none"
+                                      stroke="url(#gradient)"
+                                      stroke-width="3"
+                                      stroke-dasharray="{{ get_profile_completion() }}, 100" />
+                                <defs>
+                                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                                        <stop offset="0%" stop-color="#6C3CE1" />
+                                        <stop offset="100%" stop-color="#EC4899" />
+                                    </linearGradient>
+                                </defs>
+                            </svg>
+                            <span class="completion-text">{{ get_profile_completion() }}%</span>
+                        </div>
+                        <div class="completion-label">Profile Complete</div>
+                        <a href="{{ url_for('user_profile') }}" class="btn btn-sm btn-outline-primary">
+                            Complete Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats Cards -->
+        <div class="row g-4 mt-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card glass-card">
+                    <div class="stat-icon" style="background: rgba(108, 60, 225, 0.1); color: #6C3CE1;">
+                        <i class="fas fa-file-alt"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-number">{{ total_applications }}</h3>
+                        <p class="stat-label">Total Applications</p>
+                    </div>
+                    <div class="stat-trend up">
+                        <i class="fas fa-arrow-up"></i> 12%
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card glass-card">
+                    <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: #F59E0B;">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-number">{{ pending_applications }}</h3>
+                        <p class="stat-label">Pending Reviews</p>
+                    </div>
+                    <div class="stat-trend">
+                        <i class="fas fa-minus"></i> Awaiting
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card glass-card">
+                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: #10B981;">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-number">{{ shortlisted_applications }}</h3>
+                        <p class="stat-label">Shortlisted</p>
+                    </div>
+                    <div class="stat-trend up">
+                        <i class="fas fa-arrow-up"></i> 8%
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-card glass-card">
+                    <div class="stat-icon" style="background: rgba(236, 72, 153, 0.1); color: #EC4899;">
+                        <i class="fas fa-bookmark"></i>
+                    </div>
+                    <div class="stat-info">
+                        <h3 class="stat-number">{{ saved_count }}</h3>
+                        <p class="stat-label">Saved Jobs</p>
+                    </div>
+                    <div class="stat-trend">
+                        <i class="fas fa-minus"></i> Saved
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Recommended Jobs & Recent Activity -->
+        <div class="row g-4 mt-4">
+            <div class="col-lg-8">
+                <div class="section-card glass-card">
+                    <div class="section-header">
+                        <div>
+                            <h3 class="section-title">
+                                <i class="fas fa-robot" style="color: var(--primary-color);"></i>
+                                Recommended Jobs
+                            </h3>
+                            <p class="section-subtitle">Based on your skills and preferences</p>
+                        </div>
+                        <a href="{{ url_for('user_jobs') }}" class="btn btn-sm btn-outline-primary">
+                            View All <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    
+                    {% if recommended_jobs %}
+                        <div class="recommended-list">
+                            {% for job, match in recommended_jobs %}
+                                <div class="recommended-item">
+                                    <div class="job-info">
+                                        <h4>
+                                            <a href="{{ url_for('job_detail', job_id=job.id) }}">{{ job.title }}</a>
+                                        </h4>
+                                        <p class="company">{{ job.employer.company_name if job.employer else 'Unknown' }}</p>
+                                        <div class="job-tags">
+                                            <span class="tag"><i class="fas fa-map-marker-alt"></i> {{ job.location or 'Remote' }}</span>
+                                            <span class="tag"><i class="fas fa-briefcase"></i> {{ job.job_type or 'Full-time' }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="match-badge">
+                                        <div class="match-circle">
+                                            <svg viewBox="0 0 36 36">
+                                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                      fill="none"
+                                                      stroke="#e2e8f0"
+                                                      stroke-width="3"
+                                                      stroke-dasharray="100, 100" />
+                                                <path d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"
+                                                      fill="none"
+                                                      stroke="#10B981"
+                                                      stroke-width="3"
+                                                      stroke-dasharray="{{ match }}, 100" />
+                                            </svg>
+                                            <span class="match-text">{{ match }}%</span>
+                                        </div>
+                                        <span class="match-label">Match</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-search"></i>
+                            <h5>No recommendations yet</h5>
+                            <p>Update your skills and profile to get personalized job recommendations.</p>
+                            <a href="{{ url_for('user_profile') }}" class="btn btn-primary btn-sm">
+                                Update Profile
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <!-- Recent Applications -->
+                <div class="section-card glass-card">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fas fa-history" style="color: var(--primary-color);"></i>
+                            Recent Activity
+                        </h3>
+                    </div>
+                    
+                    {% if applications %}
+                        <div class="activity-list">
+                            {% for app in applications[:5] %}
+                                <div class="activity-item">
+                                    <div class="activity-icon status-{{ app.status }}">
+                                        <i class="fas fa-{% if app.status == 'pending' %}clock{% elif app.status == 'shortlisted' %}star{% elif app.status == 'approved' %}check-circle{% else %}times-circle{% endif %}"></i>
+                                    </div>
+                                    <div class="activity-info">
+                                        <p class="activity-text">
+                                            Applied for <strong>{{ app.job.title }}</strong>
+                                        </p>
+                                        <span class="activity-time">{{ app.applied_date.strftime('%b %d, %Y') }}</span>
+                                    </div>
+                                    <span class="activity-status status-{{ app.status }}">
+                                        {{ app.status|capitalize }}
+                                    </span>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('user_applications') }}" class="btn btn-sm btn-outline-primary">
+                                View All Applications
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-file-alt"></i>
+                            <h5>No applications yet</h5>
+                            <p>Start applying to jobs and track your progress here.</p>
+                            <a href="{{ url_for('user_jobs') }}" class="btn btn-primary btn-sm">
+                                Find Jobs
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Notifications -->
+                <div class="section-card glass-card mt-4">
+                    <div class="section-header">
+                        <h3 class="section-title">
+                            <i class="fas fa-bell" style="color: var(--primary-color);"></i>
+                            Notifications
+                            <span class="badge bg-primary">{{ notifications|length }}</span>
+                        </h3>
+                    </div>
+                    
+                    {% if notifications %}
+                        <div class="notification-list">
+                            {% for notif in notifications[:3] %}
+                                <div class="notification-item">
+                                    <div class="notif-icon type-{{ notif.type }}">
+                                        <i class="fas fa-{% if notif.type == 'success' %}check-circle{% elif notif.type == 'warning' %}exclamation-triangle{% elif notif.type == 'error' %}times-circle{% else %}info-circle{% endif %}"></i>
+                                    </div>
+                                    <div class="notif-content">
+                                        <p class="notif-text">{{ notif.title }}</p>
+                                        <span class="notif-time">{{ notif.created_at.strftime('%b %d, %I:%M %p') }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <div class="text-center mt-3">
+                            <a href="{{ url_for('user_notifications') }}" class="btn btn-sm btn-outline-primary">
+                                View All Notifications
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="fas fa-bell-slash"></i>
+                            <h5>No notifications</h5>
+                            <p>You're all caught up!</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ============================================
+   Dashboard Styles
+   ============================================ */
+
+.dashboard-page {
+    padding: 24px 0 60px;
+}
+
+/* Welcome Section */
+.welcome-section {
+    padding: 32px 40px;
+    border-radius: 24px;
+    background: linear-gradient(135deg, rgba(108, 60, 225, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+}
+
+.welcome-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(108, 60, 225, 0.1);
+    color: var(--primary-color);
+    padding: 4px 16px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+.welcome-title {
+    font-size: 32px;
+    font-weight: 800;
+    margin-bottom: 4px;
+}
+
+.welcome-subtitle {
+    color: var(--text-secondary);
+    font-size: 16px;
+    margin: 0;
+}
+
+.profile-completion {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.completion-circle {
+    position: relative;
+    width: 80px;
+    height: 80px;
+}
+
+.completion-circle svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.completion-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.completion-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    margin-top: 4px;
+}
+
+/* Stat Cards */
+.stat-card {
+    padding: 24px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-number {
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 4px 0 0;
+}
+
+.stat-trend {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 2px 10px;
+    border-radius: 50px;
+}
+
+.stat-trend.up {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.stat-trend.down {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+/* Section Cards */
+.section-card {
+    padding: 24px;
+    border-radius: 20px;
+}
+
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.section-title i {
+    margin-right: 8px;
+}
+
+.section-subtitle {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin: 4px 0 0;
+}
+
+/* Recommended Jobs */
+.recommended-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.recommended-item:last-child {
+    border-bottom: none;
+}
+
+.job-info h4 {
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+}
+
+.job-info h4 a {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.job-info h4 a:hover {
+    color: var(--primary-color);
+}
+
+.job-info .company {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 2px 0 6px;
+}
+
+.job-info .job-tags {
+    display: flex;
+    gap: 8px;
+}
+
+.job-info .tag {
+    font-size: 12px;
+    padding: 2px 10px;
+    background: var(--bg-secondary);
+    border-radius: 50px;
+    color: var(--text-secondary);
+}
+
+.match-badge {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.match-circle {
+    width: 50px;
+    height: 50px;
+    position: relative;
+}
+
+.match-circle svg {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.match-text {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 12px;
+    font-weight: 700;
+    color: #10B981;
+}
+
+.match-label {
+    font-size: 10px;
+    color: var(--text-muted);
+}
+
+/* Activity List */
+.activity-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+}
+
+.activity-icon.status-pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: #F59E0B;
+}
+
+.activity-icon.status-shortlisted {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.activity-icon.status-approved {
+    background: rgba(52, 211, 153, 0.1);
+    color: #34D399;
+}
+
+.activity-icon.status-rejected {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+.activity-info {
+    flex: 1;
+}
+
+.activity-text {
+    font-size: 14px;
+    margin: 0;
+}
+
+.activity-text strong {
+    color: var(--text-primary);
+}
+
+.activity-time {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.activity-status {
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 12px;
+    border-radius: 50px;
+}
+
+.activity-status.status-pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: #F59E0B;
+}
+
+.activity-status.status-shortlisted {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.activity-status.status-approved {
+    background: rgba(52, 211, 153, 0.1);
+    color: #34D399;
+}
+
+.activity-status.status-rejected {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+/* Notification List */
+.notification-item {
+    display: flex;
+    gap: 12px;
+    padding: 12px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.notification-item:last-child {
+    border-bottom: none;
+}
+
+.notif-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    flex-shrink: 0;
+}
+
+.notif-icon.type-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.notif-icon.type-warning {
+    background: rgba(245, 158, 11, 0.1);
+    color: #F59E0B;
+}
+
+.notif-icon.type-error {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+.notif-icon.type-info {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3B82F6;
+}
+
+.notif-content {
+    flex: 1;
+}
+
+.notif-text {
+    font-size: 14px;
+    margin: 0;
+}
+
+.notif-time {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Empty State */
+.empty-state {
+    text-align: center;
+    padding: 32px 16px;
+}
+
+.empty-state i {
+    font-size: 48px;
+    color: var(--text-muted);
+    opacity: 0.3;
+    margin-bottom: 12px;
+}
+
+.empty-state h5 {
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.empty-state p {
+    font-size: 14px;
+    color: var(--text-muted);
+    margin-bottom: 12px;
+}
+
+/* Dark Mode */
+body.dark-mode .welcome-section {
+    background: linear-gradient(135deg, rgba(108, 60, 225, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+}
+
+body.dark-mode .recommended-item,
+body.dark-mode .activity-item,
+body.dark-mode .notification-item {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .job-info .tag {
+    background: #334155;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .welcome-section {
+        padding: 24px 20px;
+    }
+    
+    .welcome-title {
+        font-size: 24px;
+    }
+    
+    .stat-card {
+        padding: 16px 20px;
+    }
+    
+    .stat-number {
+        font-size: 22px;
+    }
+    
+    .section-card {
+        padding: 16px;
+    }
+    
+    .recommended-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+    
+    .match-badge {
+        flex-direction: row;
+        gap: 12px;
+    }
+}
+</style>
+{% endblock %}

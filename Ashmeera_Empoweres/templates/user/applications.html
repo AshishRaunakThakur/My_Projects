@@ -1,0 +1,694 @@
+{% extends "base.html" %}
+
+{% block title %}My Applications - Ashmeera Empowers{% endblock %}
+
+{% block content %}
+<div class="applications-page">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <div class="header-icon">
+                    <i class="fas fa-file-alt"></i>
+                </div>
+                <div>
+                    <h1 class="page-title">My Applications</h1>
+                    <p class="page-subtitle">Track all your job applications in one place</p>
+                </div>
+            </div>
+            <div class="header-stats">
+                <div class="stat-badge">
+                    <span class="stat-number">{{ applications|length }}</span>
+                    <span class="stat-label">Total Applications</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Tabs -->
+        <div class="filter-tabs">
+            <button class="tab-btn active" data-filter="all" onclick="filterApplications('all')">
+                <i class="fas fa-list"></i> All
+                <span class="tab-count">{{ applications|length }}</span>
+            </button>
+            <button class="tab-btn" data-filter="pending" onclick="filterApplications('pending')">
+                <i class="fas fa-clock"></i> Pending
+                <span class="tab-count">{{ applications|selectattr('status', 'equalto', 'pending')|list|length }}</span>
+            </button>
+            <button class="tab-btn" data-filter="shortlisted" onclick="filterApplications('shortlisted')">
+                <i class="fas fa-star"></i> Shortlisted
+                <span class="tab-count">{{ applications|selectattr('status', 'equalto', 'shortlisted')|list|length }}</span>
+            </button>
+            <button class="tab-btn" data-filter="approved" onclick="filterApplications('approved')">
+                <i class="fas fa-check-circle"></i> Approved
+                <span class="tab-count">{{ applications|selectattr('status', 'equalto', 'approved')|list|length }}</span>
+            </button>
+            <button class="tab-btn" data-filter="rejected" onclick="filterApplications('rejected')">
+                <i class="fas fa-times-circle"></i> Rejected
+                <span class="tab-count">{{ applications|selectattr('status', 'equalto', 'rejected')|list|length }}</span>
+            </button>
+        </div>
+
+        <!-- Applications List -->
+        {% if applications %}
+            <div class="applications-list" id="applicationsList">
+                {% for app in applications %}
+                    <div class="application-item glass-card" data-status="{{ app.status }}">
+                        <div class="application-header">
+                            <div class="application-company">
+                                <div class="company-logo">
+                                    {% set employer = app.job.employer %}
+                                    {% if employer and employer.company_logo %}
+                                        <img src="{{ url_for('static', filename='uploads/profiles/' + employer.company_logo) }}" alt="{{ employer.company_name }}">
+                                    {% else %}
+                                        <div class="company-logo-placeholder">
+                                            {{ app.job.employer.company_name[0]|upper if app.job.employer else 'C' }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="company-details">
+                                    <h3 class="job-title">
+                                        <a href="{{ url_for('job_detail', job_id=app.job.id) }}">{{ app.job.title }}</a>
+                                    </h3>
+                                    <p class="company-name">{{ app.job.employer.company_name if app.job.employer else 'Company' }}</p>
+                                </div>
+                            </div>
+                            <div class="application-status">
+                                <span class="status-badge status-{{ app.status }}">
+                                    <i class="fas fa-{% if app.status == 'pending' %}clock{% elif app.status == 'shortlisted' %}star{% elif app.status == 'approved' %}check-circle{% else %}times-circle{% endif %}"></i>
+                                    {{ app.status|capitalize }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="application-body">
+                            <div class="application-meta">
+                                <div class="meta-item">
+                                    <i class="fas fa-calendar-alt"></i>
+                                    <span>Applied: {{ app.applied_date.strftime('%b %d, %Y at %I:%M %p') }}</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                    <span>{{ app.job.location or 'Remote' }}</span>
+                                </div>
+                                <div class="meta-item">
+                                    <i class="fas fa-briefcase"></i>
+                                    <span>{{ app.job.job_type or 'Full-time' }}</span>
+                                </div>
+                                {% if app.match_percentage %}
+                                    <div class="meta-item match-item">
+                                        <i class="fas fa-robot"></i>
+                                        <span>Match: <strong>{{ app.match_percentage }}%</strong></span>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            {% if app.cover_letter %}
+                                <div class="cover-letter">
+                                    <button class="toggle-letter" onclick="toggleCoverLetter(this)">
+                                        <i class="fas fa-chevron-right"></i> View Cover Letter
+                                    </button>
+                                    <div class="cover-letter-content" style="display: none;">
+                                        {{ app.cover_letter }}
+                                    </div>
+                                </div>
+                            {% endif %}
+                        </div>
+
+                        <div class="application-footer">
+                            <div class="footer-actions">
+                                <a href="{{ url_for('job_detail', job_id=app.job.id) }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-eye"></i> View Job
+                                </a>
+                                {% if app.status == 'pending' %}
+                                    <button class="btn btn-sm btn-outline-secondary" disabled>
+                                        <i class="fas fa-hourglass-half"></i> Awaiting Review
+                                    </button>
+                                {% elif app.status == 'shortlisted' %}
+                                    <button class="btn btn-sm btn-success" disabled>
+                                        <i class="fas fa-star"></i> Shortlisted!
+                                    </button>
+                                {% elif app.status == 'approved' %}
+                                    <button class="btn btn-sm btn-success" disabled>
+                                        <i class="fas fa-check-circle"></i> Approved!
+                                    </button>
+                                {% elif app.status == 'rejected' %}
+                                    <button class="btn btn-sm btn-danger" disabled>
+                                        <i class="fas fa-times-circle"></i> Rejected
+                                    </button>
+                                {% endif %}
+                            </div>
+                            <span class="application-id">#APP-{{ app.id }}</span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state glass-card">
+                <div class="empty-content">
+                    <i class="fas fa-file-alt"></i>
+                    <h3>No Applications Yet</h3>
+                    <p>You haven't applied to any jobs yet. Start your job search today!</p>
+                    <a href="{{ url_for('user_jobs') }}" class="btn btn-primary">
+                        <i class="fas fa-search"></i> Browse Jobs
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ============================================
+   Applications Page Styles
+   ============================================ */
+
+.applications-page {
+    padding: 24px 0 60px;
+}
+
+/* Page Header */
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding: 24px 32px;
+    background: linear-gradient(135deg, rgba(108, 60, 225, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+    border-radius: 20px;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0;
+}
+
+.page-subtitle {
+    color: var(--text-secondary);
+    margin: 4px 0 0;
+}
+
+.header-stats .stat-badge {
+    text-align: center;
+    padding: 8px 20px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.stat-number {
+    display: block;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--primary-color);
+}
+
+.stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+/* Filter Tabs */
+.filter-tabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+
+.tab-btn {
+    padding: 8px 20px;
+    border: 2px solid #e2e8f0;
+    border-radius: 50px;
+    background: transparent;
+    color: var(--text-secondary);
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tab-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.tab-btn.active {
+    border-color: var(--primary-color);
+    background: rgba(108, 60, 225, 0.08);
+    color: var(--primary-color);
+}
+
+.tab-count {
+    background: var(--bg-secondary);
+    padding: 0 8px;
+    border-radius: 50px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.tab-btn.active .tab-count {
+    background: rgba(108, 60, 225, 0.1);
+    color: var(--primary-color);
+}
+
+/* Application Items */
+.application-item {
+    padding: 24px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+}
+
+.application-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+}
+
+.application-item.hidden {
+    display: none;
+}
+
+.application-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.application-company {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.company-logo {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+}
+
+.company-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.company-logo-placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.job-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.job-title a {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.job-title a:hover {
+    color: var(--primary-color);
+}
+
+.company-name {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 2px 0 0;
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.status-badge.status-pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: #F59E0B;
+}
+
+.status-badge.status-shortlisted {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.status-badge.status-approved {
+    background: rgba(52, 211, 153, 0.1);
+    color: #34D399;
+}
+
+.status-badge.status-rejected {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+/* Application Meta */
+.application-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding: 12px 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.meta-item i {
+    color: var(--primary-color);
+    font-size: 14px;
+}
+
+.meta-item.match-item {
+    color: var(--primary-color);
+    font-weight: 500;
+}
+
+.meta-item.match-item strong {
+    color: #10B981;
+}
+
+/* Cover Letter */
+.cover-letter {
+    margin-top: 12px;
+}
+
+.toggle-letter {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 0;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.toggle-letter:hover {
+    color: var(--primary-dark);
+}
+
+.toggle-letter i {
+    transition: all 0.3s ease;
+}
+
+.toggle-letter.open i {
+    transform: rotate(90deg);
+}
+
+.cover-letter-content {
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* Application Footer */
+.application-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.footer-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.application-id {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 500;
+}
+
+/* Empty State */
+.empty-state {
+    padding: 60px 40px;
+    text-align: center;
+    border-radius: 20px;
+}
+
+.empty-content i {
+    font-size: 64px;
+    color: var(--text-muted);
+    opacity: 0.3;
+    margin-bottom: 16px;
+}
+
+.empty-content h3 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.empty-content p {
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+/* Dark Mode */
+body.dark-mode .page-header {
+    background: linear-gradient(135deg, rgba(108, 60, 225, 0.1) 0%, rgba(236, 72, 153, 0.1) 100%);
+}
+
+body.dark-mode .header-stats .stat-badge {
+    background: #1e293b;
+}
+
+body.dark-mode .tab-btn {
+    border-color: #334155;
+    color: #94a3b8;
+}
+
+body.dark-mode .tab-btn.active {
+    border-color: var(--primary-color);
+    background: rgba(108, 60, 225, 0.15);
+    color: var(--primary-color);
+}
+
+body.dark-mode .tab-count {
+    background: #334155;
+}
+
+body.dark-mode .application-meta {
+    border-color: rgba(255, 255, 255, 0.04);
+}
+
+body.dark-mode .application-footer {
+    border-color: rgba(255, 255, 255, 0.04);
+}
+
+body.dark-mode .cover-letter-content {
+    background: #1e293b;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+        padding: 20px;
+    }
+    
+    .header-content {
+        flex-direction: column;
+    }
+    
+    .application-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+    
+    .application-status {
+        width: 100%;
+    }
+    
+    .status-badge {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .application-meta {
+        flex-direction: column;
+        gap: 8px;
+    }
+    
+    .application-footer {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+    
+    .footer-actions {
+        flex-wrap: wrap;
+    }
+    
+    .footer-actions .btn {
+        flex: 1;
+        text-align: center;
+    }
+    
+    .filter-tabs {
+        justify-content: center;
+    }
+    
+    .tab-btn {
+        font-size: 12px;
+        padding: 6px 14px;
+    }
+}
+
+@media (max-width: 576px) {
+    .page-title {
+        font-size: 22px;
+    }
+    
+    .application-item {
+        padding: 16px;
+    }
+    
+    .job-title {
+        font-size: 16px;
+    }
+    
+    .company-logo {
+        width: 44px;
+        height: 44px;
+    }
+    
+    .company-logo-placeholder {
+        width: 44px;
+        height: 44px;
+        font-size: 18px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Filter applications by status
+function filterApplications(status) {
+    const items = document.querySelectorAll('.application-item');
+    const tabs = document.querySelectorAll('.tab-btn');
+    
+    // Update active tab
+    tabs.forEach(tab => {
+        tab.classList.remove('active');
+        if (tab.dataset.filter === status) {
+            tab.classList.add('active');
+        }
+    });
+    
+    // Filter items
+    items.forEach(item => {
+        if (status === 'all') {
+            item.classList.remove('hidden');
+        } else {
+            if (item.dataset.status === status) {
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
+            }
+        }
+    });
+}
+
+// Toggle cover letter visibility
+function toggleCoverLetter(button) {
+    const content = button.nextElementSibling;
+    const icon = button.querySelector('i');
+    
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        button.classList.add('open');
+        icon.className = 'fas fa-chevron-down';
+        button.innerHTML = '<i class="fas fa-chevron-down"></i> Hide Cover Letter';
+    } else {
+        content.style.display = 'none';
+        button.classList.remove('open');
+        icon.className = 'fas fa-chevron-right';
+        button.innerHTML = '<i class="fas fa-chevron-right"></i> View Cover Letter';
+    }
+}
+
+// Animation on scroll
+document.addEventListener('DOMContentLoaded', function() {
+    const items = document.querySelectorAll('.application-item');
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry, index) => {
+            if (entry.isIntersecting) {
+                setTimeout(() => {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }, index * 100);
+            }
+        });
+    });
+    
+    items.forEach(item => {
+        item.style.opacity = '0';
+        item.style.transform = 'translateY(20px)';
+        item.style.transition = 'all 0.4s ease';
+        observer.observe(item);
+    });
+});
+</script>
+{% endblock %}

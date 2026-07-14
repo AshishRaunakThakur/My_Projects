@@ -1,0 +1,625 @@
+{% extends "base.html" %}
+
+{% block title %}Applicants - Ashmeera Empowers{% endblock %}
+
+{% block content %}
+<div class="applicants-page">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <div class="header-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <div>
+                    <h1 class="page-title">Applicants</h1>
+                    <p class="page-subtitle">{{ applications|length }} total applications received</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-section glass-card">
+            <form method="GET" action="{{ url_for('employer_applicants') }}" class="filters-form">
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <label><i class="fas fa-briefcase"></i> Job</label>
+                        <select name="job_id" class="form-control" onchange="this.form.submit()">
+                            <option value="">All Jobs</option>
+                            {% for job in jobs %}
+                                <option value="{{ job.id }}" {% if selected_job == job.id|string %}selected{% endif %}>
+                                    {{ job.title }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label><i class="fas fa-filter"></i> Status</label>
+                        <select name="status" class="form-control" onchange="this.form.submit()">
+                            <option value="">All Status</option>
+                            <option value="pending" {% if selected_status == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="shortlisted" {% if selected_status == 'shortlisted' %}selected{% endif %}>Shortlisted</option>
+                            <option value="approved" {% if selected_status == 'approved' %}selected{% endif %}>Approved</option>
+                            <option value="rejected" {% if selected_status == 'rejected' %}selected{% endif %}>Rejected</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>&nbsp;</label>
+                        <a href="{{ url_for('employer_applicants') }}" class="btn btn-outline-secondary">
+                            <i class="fas fa-undo"></i> Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Applicants List -->
+        {% if applications %}
+            <div class="applicants-list">
+                {% for app in applications %}
+                    <div class="applicant-card glass-card" data-app-id="{{ app.id }}">
+                        <div class="applicant-header">
+                            <div class="applicant-info">
+                                <div class="applicant-avatar">
+                                    {% if app.user.profile_photo %}
+                                        <img src="{{ url_for('static', filename='uploads/profiles/' + app.user.profile_photo) }}" alt="{{ app.user.full_name }}">
+                                    {% else %}
+                                        <div class="avatar-placeholder">
+                                            {{ app.user.full_name[0]|upper }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <div class="applicant-details">
+                                    <h4 class="applicant-name">{{ app.user.full_name }}</h4>
+                                    <p class="applicant-email">{{ app.user.email }}</p>
+                                    <div class="applicant-meta">
+                                        <span><i class="fas fa-map-marker-alt"></i> {{ app.user.location or 'N/A' }}</span>
+                                        <span><i class="fas fa-phone"></i> {{ app.user.phone or 'N/A' }}</span>
+                                        {% if app.match_percentage %}
+                                            <span class="match-badge">
+                                                <i class="fas fa-robot"></i> {{ app.match_percentage }}% Match
+                                            </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="applicant-status">
+                                <span class="status-badge status-{{ app.status }}">
+                                    <i class="fas fa-{% if app.status == 'pending' %}clock{% elif app.status == 'shortlisted' %}star{% elif app.status == 'approved' %}check-circle{% else %}times-circle{% endif %}"></i>
+                                    {{ app.status|capitalize }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="applicant-body">
+                            <div class="applicant-job">
+                                <strong>Applied for:</strong> 
+                                <a href="{{ url_for('job_detail', job_id=app.job.id) }}">{{ app.job.title }}</a>
+                                <span class="applied-date">
+                                    <i class="far fa-calendar-alt"></i> {{ app.applied_date.strftime('%b %d, %Y at %I:%M %p') }}
+                                </span>
+                            </div>
+
+                            {% if app.cover_letter %}
+                                <div class="cover-letter">
+                                    <button class="toggle-letter" onclick="toggleCoverLetter(this)">
+                                        <i class="fas fa-chevron-right"></i> View Cover Letter
+                                    </button>
+                                    <div class="cover-letter-content" style="display: none;">
+                                        {{ app.cover_letter }}
+                                    </div>
+                                </div>
+                            {% endif %}
+
+                            <div class="applicant-skills">
+                                <strong>Skills:</strong>
+                                {% if app.user.skills %}
+                                    {% for skill in app.user.skills.split(',') %}
+                                        <span class="skill-tag">{{ skill.strip() }}</span>
+                                    {% endfor %}
+                                {% else %}
+                                    <span class="text-muted">No skills listed</span>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <div class="applicant-footer">
+                            <div class="status-actions">
+                                {% if app.status == 'pending' %}
+                                    <button class="btn btn-sm btn-success" onclick="updateStatus({{ app.id }}, 'shortlisted')">
+                                        <i class="fas fa-star"></i> Shortlist
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="updateStatus({{ app.id }}, 'rejected')">
+                                        <i class="fas fa-times"></i> Reject
+                                    </button>
+                                {% elif app.status == 'shortlisted' %}
+                                    <button class="btn btn-sm btn-success" onclick="updateStatus({{ app.id }}, 'approved')">
+                                        <i class="fas fa-check"></i> Approve
+                                    </button>
+                                    <button class="btn btn-sm btn-danger" onclick="updateStatus({{ app.id }}, 'rejected')">
+                                        <i class="fas fa-times"></i> Reject
+                                    </button>
+                                {% elif app.status == 'approved' %}
+                                    <span class="text-success"><i class="fas fa-check-circle"></i> Approved</span>
+                                {% elif app.status == 'rejected' %}
+                                    <span class="text-danger"><i class="fas fa-times-circle"></i> Rejected</span>
+                                {% endif %}
+                            </div>
+                            <div class="applicant-actions">
+                                {% if app.user.resume %}
+                                    <a href="{{ url_for('static', filename='uploads/resumes/' + app.user.resume) }}" 
+                                       class="btn btn-sm btn-outline-primary" target="_blank">
+                                        <i class="fas fa-file-pdf"></i> Download Resume
+                                    </a>
+                                {% endif %}
+                                <a href="mailto:{{ app.user.email }}" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-envelope"></i> Contact
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state glass-card">
+                <div class="empty-content">
+                    <i class="fas fa-users"></i>
+                    <h3>No Applicants Yet</h3>
+                    <p>When candidates apply to your jobs, they'll appear here.</p>
+                    <a href="{{ url_for('post_job') }}" class="btn btn-primary">
+                        <i class="fas fa-plus-circle"></i> Post a Job
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.applicants-page {
+    padding: 24px 0 60px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding: 24px 32px;
+    background: linear-gradient(135deg, rgba(108, 60, 225, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+    border-radius: 20px;
+}
+
+.header-content {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.header-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0;
+}
+
+.page-subtitle {
+    color: var(--text-secondary);
+    margin: 4px 0 0;
+}
+
+.filters-section {
+    padding: 20px 24px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+}
+
+.filters-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    align-items: flex-end;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 180px;
+}
+
+.filter-group label {
+    font-weight: 600;
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    display: block;
+}
+
+.filter-group .form-control {
+    padding: 10px 14px;
+    border-radius: 10px;
+    border: 2px solid #e2e8f0;
+}
+
+.applicant-card {
+    padding: 24px;
+    border-radius: 16px;
+    margin-bottom: 16px;
+    transition: all 0.3s ease;
+}
+
+.applicant-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+}
+
+.applicant-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.applicant-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.applicant-avatar {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.applicant-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar-placeholder {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.applicant-name {
+    font-size: 18px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.applicant-email {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin: 2px 0 0;
+}
+
+.applicant-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 4px;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.applicant-meta i {
+    margin-right: 4px;
+    color: var(--primary-color);
+}
+
+.match-badge {
+    color: #10B981;
+    font-weight: 600;
+}
+
+.status-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 14px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.status-badge.status-pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: #F59E0B;
+}
+
+.status-badge.status-shortlisted {
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+}
+
+.status-badge.status-approved {
+    background: rgba(52, 211, 153, 0.1);
+    color: #34D399;
+}
+
+.status-badge.status-rejected {
+    background: rgba(239, 68, 68, 0.1);
+    color: #EF4444;
+}
+
+.applicant-body {
+    padding: 12px 0;
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.applicant-job {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.applicant-job a {
+    color: var(--text-primary);
+    font-weight: 500;
+    text-decoration: none;
+}
+
+.applicant-job a:hover {
+    color: var(--primary-color);
+}
+
+.applied-date {
+    margin-left: 12px;
+    color: var(--text-muted);
+}
+
+.cover-letter {
+    margin-top: 8px;
+}
+
+.toggle-letter {
+    background: none;
+    border: none;
+    color: var(--primary-color);
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 0;
+    font-size: 14px;
+}
+
+.cover-letter-content {
+    padding: 12px 16px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    margin-top: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+.applicant-skills {
+    margin-top: 12px;
+    font-size: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+}
+
+.skill-tag {
+    padding: 2px 12px;
+    background: var(--bg-secondary);
+    border-radius: 50px;
+    font-size: 12px;
+    color: var(--text-secondary);
+}
+
+.applicant-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.status-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.applicant-actions {
+    display: flex;
+    gap: 8px;
+}
+
+/* Empty State */
+.empty-state {
+    padding: 60px 40px;
+    text-align: center;
+    border-radius: 20px;
+}
+
+.empty-content i {
+    font-size: 64px;
+    color: var(--text-muted);
+    opacity: 0.3;
+    margin-bottom: 16px;
+}
+
+/* Dark Mode */
+body.dark-mode .filter-group .form-control {
+    background: #1e293b;
+    border-color: #334155;
+    color: white;
+}
+
+body.dark-mode .applicant-body {
+    border-color: rgba(255, 255, 255, 0.04);
+}
+
+body.dark-mode .applicant-footer {
+    border-color: rgba(255, 255, 255, 0.04);
+}
+
+body.dark-mode .cover-letter-content {
+    background: #1e293b;
+}
+
+body.dark-mode .skill-tag {
+    background: #334155;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        gap: 16px;
+        text-align: center;
+        padding: 20px;
+    }
+
+    .header-content {
+        flex-direction: column;
+    }
+
+    .filters-row {
+        flex-direction: column;
+    }
+
+    .filter-group {
+        min-width: 100%;
+    }
+
+    .applicant-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .applicant-info {
+        flex-wrap: wrap;
+    }
+
+    .applicant-footer {
+        flex-direction: column;
+        gap: 12px;
+        align-items: stretch;
+    }
+
+    .status-actions {
+        flex-wrap: wrap;
+    }
+
+    .applicant-actions {
+        flex-wrap: wrap;
+    }
+
+    .applicant-actions .btn {
+        flex: 1;
+        text-align: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .applicant-card {
+        padding: 16px;
+    }
+
+    .applicant-meta {
+        flex-direction: column;
+        gap: 4px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Update Application Status
+function updateStatus(appId, status) {
+    if (!confirm(`Are you sure you want to ${status} this application?`)) return;
+
+    fetch(`/employer/application/${appId}/status`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        body: `status=${status}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const card = document.querySelector(`[data-app-id="${appId}"]`);
+            const badge = card.querySelector('.status-badge');
+            const actions = card.querySelector('.status-actions');
+
+            // Update badge
+            const icons = {
+                pending: 'clock',
+                shortlisted: 'star',
+                approved: 'check-circle',
+                rejected: 'times-circle'
+            };
+            badge.className = `status-badge status-${status}`;
+            badge.innerHTML = `<i class="fas fa-${icons[status]}"></i> ${status.charAt(0).toUpperCase() + status.slice(1)}`;
+
+            // Update actions
+            if (status === 'shortlisted') {
+                actions.innerHTML = `
+                    <button class="btn btn-sm btn-success" onclick="updateStatus(${appId}, 'approved')">
+                        <i class="fas fa-check"></i> Approve
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="updateStatus(${appId}, 'rejected')">
+                        <i class="fas fa-times"></i> Reject
+                    </button>
+                `;
+            } else if (status === 'approved') {
+                actions.innerHTML = `<span class="text-success"><i class="fas fa-check-circle"></i> Approved</span>`;
+            } else if (status === 'rejected') {
+                actions.innerHTML = `<span class="text-danger"><i class="fas fa-times-circle"></i> Rejected</span>`;
+            }
+
+            showToast(data.message, 'success');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('An error occurred. Please try again.', 'error');
+    });
+}
+
+// Toggle Cover Letter
+function toggleCoverLetter(button) {
+    const content = button.nextElementSibling;
+    if (content.style.display === 'none') {
+        content.style.display = 'block';
+        button.innerHTML = '<i class="fas fa-chevron-down"></i> Hide Cover Letter';
+    } else {
+        content.style.display = 'none';
+        button.innerHTML = '<i class="fas fa-chevron-right"></i> View Cover Letter';
+    }
+}
+</script>
+{% endblock %}

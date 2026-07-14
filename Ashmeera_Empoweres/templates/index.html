@@ -1,0 +1,385 @@
+{% extends "base.html" %}
+
+{% block title %}Ashmeera Empowers - Empowering Abilities, Creating Opportunities{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<section class="hero-section">
+    <div class="hero-gradient"></div>
+    <div class="container hero-container">
+        <div class="row align-items-center min-vh-100">
+            <div class="col-lg-7 hero-content">
+                <div class="hero-badge">
+                    <i class="fas fa-sparkles"></i>
+                    <span>Inclusive Employment Platform</span>
+                </div>
+                <div class="hero-badge">
+                    <i class="fas fa-sparkles"></i>
+                    <span>Developed By: Meenal Patro, Ashish Raunak</span>
+                </div>
+                <h1 class="hero-title">
+                    Empowering Abilities,
+                    <span class="gradient-text">Creating Opportunities</span>
+                </h1>
+                <p class="hero-description">
+                    Ashmeera Empowers is India's leading inclusive employment platform 
+                    connecting talented individuals with disabilities to verified employers, 
+                    mentors, and skill development opportunities.
+                </p>
+                <div class="hero-actions">
+                    <a href="{{ url_for('user_jobs') }}" class="btn btn-primary btn-hero">
+                        <i class="fas fa-search"></i> Find Jobs
+                    </a>
+                    <a href="{{ url_for('register') }}" class="btn btn-outline-primary btn-hero-outline">
+                        <i class="fas fa-user-plus"></i> Get Started
+                    </a>
+                </div>
+                
+                <!-- Stats -->
+                <div class="hero-stats">
+                    <div class="stat-item">
+                        <span class="stat-number" data-count="{{ total_jobs }}">0</span>
+                        <span class="stat-label">Active Jobs</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-count="{{ total_users }}">0</span>
+                        <span class="stat-label">Job Seekers</span>
+                    </div>
+                    <div class="stat-divider"></div>
+                    <div class="stat-item">
+                        <span class="stat-number" data-count="{{ total_employers }}">0</span>
+                        <span class="stat-label">Verified Employers</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5 hero-visual">
+                <div class="hero-illustration">
+                    <div class="floating-card card-1">
+                        <i class="fas fa-users"></i>
+                        <span>500+ Hired</span>
+                    </div>
+                    <div class="floating-card card-2">
+                        <i class="fas fa-star"></i>
+                        <span>98% Satisfaction</span>
+                    </div>
+                    <div class="floating-card card-3">
+                        <i class="fas fa-building"></i>
+                        <span>200+ Companies</span>
+                    </div>
+                    <div class="hero-shapes">
+                        <div class="shape shape-1"></div>
+                        <div class="shape shape-2"></div>
+                        <div class="shape shape-3"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Featured Jobs -->
+<section class="featured-section">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-badge">Featured Opportunities</div>
+            <h2 class="section-title">Latest <span class="gradient-text">Jobs</span></h2>
+            <p class="section-subtitle">Discover amazing career opportunities from inclusive employers</p>
+        </div>
+        
+        <div class="row g-4">
+            {% if featured_jobs %}
+                {% for job in featured_jobs %}
+                    <div class="col-lg-4 col-md-6">
+                        <div class="job-card premium-card">
+                            <div class="job-card-header">
+                                <div class="job-card-featured">
+                                    <i class="fas fa-crown"></i> Featured
+                                </div>
+                                <div class="job-card-company">
+                                    <div class="company-logo">
+                                        {% set employer = job.employer %}
+                                        {% if employer and employer.company_logo %}
+                                            <img src="{{ url_for('static', filename='uploads/profiles/' + employer.company_logo) }}" alt="{{ employer.company_name }}">
+                                        {% else %}
+                                            <div class="company-logo-placeholder">
+                                                {{ job.employer.company_name[0]|upper if job.employer else 'C' }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="company-info">
+                                        <h6 class="company-name">{{ job.employer.company_name if job.employer else 'Company' }}</h6>
+                                        <span class="company-verified"><i class="fas fa-check-circle"></i> Verified</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="job-card-body">
+                                <h3 class="job-title">
+                                    <a href="{{ url_for('job_detail', job_id=job.id) }}">{{ job.title }}</a>
+                                </h3>
+                                <p class="job-description">{{ job.description[:120] }}{% if job.description|length > 120 %}...{% endif %}</p>
+                                <div class="job-tags">
+                                    <span class="tag">
+                                        <i class="fas fa-map-marker-alt"></i> {{ job.location or 'Remote' }}
+                                    </span>
+                                    <span class="tag">
+                                        <i class="fas fa-briefcase"></i> {{ job.job_type or 'Full-time' }}
+                                    </span>
+                                    <span class="tag">
+                                        <i class="fas fa-money-bill-wave"></i> 
+                                        {% if job.salary_min and job.salary_max %}
+                                            ₹{{ job.salary_min|format_number }} - ₹{{ job.salary_max|format_number }}
+                                        {% else %}
+                                            Competitive
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="job-card-footer">
+                                <span class="job-posted">
+                                    <i class="far fa-clock"></i> {{ job.days_active }} days ago
+                                </span>
+                                <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-sm btn-primary">
+                                    View Details <i class="fas fa-arrow-right"></i>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            {% else %}
+                <div class="col-12 text-center">
+                    <div class="empty-state">
+                        <i class="fas fa-briefcase"></i>
+                        <h4>No Featured Jobs Available</h4>
+                        <p>Check back soon for new opportunities.</p>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+        
+        <div class="text-center mt-5">
+            <a href="{{ url_for('user_jobs') }}" class="btn btn-outline-primary btn-lg">
+                Browse All Jobs <i class="fas fa-arrow-right"></i>
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-badge">Why Ashmeera</div>
+            <h2 class="section-title">How We <span class="gradient-text">Empower</span></h2>
+            <p class="section-subtitle">We're building a more inclusive future of work</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-3 col-md-6">
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-hand-holding-heart"></i>
+                    </div>
+                    <h4>Inclusive Hiring</h4>
+                    <p>Verified employers committed to inclusive hiring practices and accessible workplaces.</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-brain"></i>
+                    </div>
+                    <h4>AI Recommendations</h4>
+                    <p>Smart job matching powered by AI to find the perfect opportunity for your skills.</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-universal-access"></i>
+                    </div>
+                    <h4>Accessibility First</h4>
+                    <p>Built with WCAG standards including dark mode, text-to-speech, and keyboard navigation.</p>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="feature-card glass-card">
+                    <div class="feature-icon">
+                        <i class="fas fa-people-arrows"></i>
+                    </div>
+                    <h4>Community Support</h4>
+                    <p>Connect with mentors, access skill development, and join a supportive community.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Categories Section -->
+<section class="categories-section">
+    <div class="container">
+        <div class="section-header">
+            <div class="section-badge">Popular Categories</div>
+            <h2 class="section-title">Browse by <span class="gradient-text">Category</span></h2>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="{{ url_for('user_jobs', category='Technology') }}" class="category-card">
+                    <i class="fas fa-code"></i>
+                    <span>Technology</span>
+                </a>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="{{ url_for('user_jobs', category='Healthcare') }}" class="category-card">
+                    <i class="fas fa-heartbeat"></i>
+                    <span>Healthcare</span>
+                </a>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="{{ url_for('user_jobs', category='Education') }}" class="category-card">
+                    <i class="fas fa-graduation-cap"></i>
+                    <span>Education</span>
+                </a>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="{{ url_for('user_jobs', category='Finance') }}" class="category-card">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Finance</span>
+                </a>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="{{ url_for('user_jobs', category='Design') }}" class="category-card">
+                    <i class="fas fa-paint-brush"></i>
+                    <span>Design</span>
+                </a>
+            </div>
+            <div class="col-lg-2 col-md-4 col-6">
+                <a href="{{ url_for('user_jobs', category='Marketing') }}" class="category-card">
+                    <i class="fas fa-bullhorn"></i>
+                    <span>Marketing</span>
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section">
+    <div class="container">
+        <div class="cta-wrapper glass-card">
+            <div class="row align-items-center">
+                <div class="col-lg-8">
+                    <div class="cta-badge">Join the Movement</div>
+                    <h2 class="cta-title">Ready to <span class="gradient-text">Make a Difference?</span></h2>
+                    <p class="cta-description">
+                        Whether you're looking for your dream job or seeking talented professionals, 
+                        Ashmeera Empowers is here to create opportunities for everyone.
+                    </p>
+                </div>
+                <div class="col-lg-4 text-lg-end">
+                    <a href="{{ url_for('register') }}" class="btn btn-primary btn-cta">
+                        Get Started Now <i class="fas fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- ============== FOOTER - ONLY ON INDEX PAGE ============== -->
+<footer class="footer">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="footer-brand">
+                    <i class="fas fa-hands-helping"></i>
+                    <span>Ashmeera Empowers</span>
+                </div>
+                <p class="footer-tagline">Empowering Abilities, Creating Opportunities</p>
+                <div class="social-links">
+                    <a href="#" aria-label="Facebook"><i class="fab fa-facebook"></i></a>
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                </div>
+            </div>
+            <div class="col-md-2">
+                <h5>For Job Seekers</h5>
+                <ul>
+                    <li><a href="{{ url_for('user_jobs') }}">Browse Jobs</a></li>
+                    <li><a href="{{ url_for('user_dashboard') }}">My Dashboard</a></li>
+                    <li><a href="{{ url_for('user_applications') }}">Applications</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <h5>For Employers</h5>
+                <ul>
+                    <li><a href="{{ url_for('post_job') }}">Post a Job</a></li>
+                    <li><a href="{{ url_for('employer_dashboard') }}">Dashboard</a></li>
+                    <li><a href="{{ url_for('employer_applicants') }}">Find Talent</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <h5>Resources</h5>
+                <ul>
+                    <li><a href="#">About Us</a></li>
+                    <li><a href="#">Contact</a></li>
+                    <li><a href="#">Help Center</a></li>
+                    <li><a href="#">Accessibility</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2">
+                <h5>Legal</h5>
+                <ul>
+                    <li><a href="{{ url_for('privacy_policy') }}">Privacy Policy</a></li>
+                    <li><a href="{{ url_for('terms_conditions') }}">Terms & Conditions</a></li>
+                    <li><a href="#">Cookie Policy</a></li>
+                    <li><a href="#">Accessibility</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Ashmeera Empowers. All rights reserved.</p>
+        </div>
+    </div>
+</footer>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Animated counter for stats
+    document.addEventListener('DOMContentLoaded', function() {
+        const statNumbers = document.querySelectorAll('.stat-number');
+        
+        const animateCounter = (element) => {
+            const target = parseInt(element.getAttribute('data-count'));
+            const duration = 2000;
+            const steps = 60;
+            const increment = target / steps;
+            let current = 0;
+            
+            const counter = setInterval(() => {
+                current += increment;
+                if (current >= target) {
+                    element.textContent = target;
+                    clearInterval(counter);
+                } else {
+                    element.textContent = Math.floor(current);
+                }
+            }, duration / steps);
+        };
+        
+        // Intersection Observer for stats
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCounter(entry.target);
+                    observer.unobserve(entry.target);
+                }
+            });
+        });
+        
+        statNumbers.forEach(stat => observer.observe(stat));
+    });
+</script>
+{% endblock %}

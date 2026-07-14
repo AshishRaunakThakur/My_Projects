@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Employers - Admin{% endblock %}
+
+{% block content %}
+<!-- Admin Permission Check -->
+{% if current_user.user_type != 'admin' %}
+    <script>
+        window.location.href = "{{ url_for('dashboard') }}";
+    </script>
+{% endif %}
+
+<div class="admin-page">
+    <div class="container">
+        <!-- Page Header -->
+        <div class="page-header">
+            <div class="header-content">
+                <div class="header-icon" style="background: #10B981;">
+                    <i class="fas fa-building"></i>
+                </div>
+                <div>
+                    <h1 class="page-title">Manage Employers</h1>
+                    <p class="page-subtitle">{{ employers|length }} registered employers</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters-section glass-card">
+            <div class="filters-row">
+                <div class="filter-group">
+                    <input type="text" class="form-control" placeholder="Search employers..." id="searchEmployers" onkeyup="filterEmployers()">
+                </div>
+                <div class="filter-group">
+                    <select class="form-control" id="filterVerify" onchange="filterEmployers()">
+                        <option value="">All Status</option>
+                        <option value="verified">Verified</option>
+                        <option value="pending">Pending</option>
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <a href="{{ url_for('admin_dashboard') }}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Back
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Employers Table -->
+        <div class="table-card glass-card">
+            <div class="table-responsive">
+                <table class="table admin-table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Company</th>
+                            <th>Email</th>
+                            <th>Industry</th>
+                            <th>Jobs</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if employers %}
+                            {% for emp in employers %}
+                                <tr data-status="{% if emp.is_verified %}verified{% else %}pending{% endif %}">
+                                    <td>{{ loop.index }}</td>
+                                    <td>
+                                        <div class="company-info">
+                                            <div class="company-logo-sm">
+                                                {% if emp.company_logo %}
+                                                    <img src="{{ url_for('static', filename='uploads/profiles/' + emp.company_logo) }}" alt="{{ emp.company_name }}">
+                                                {% else %}
+                                                    <div class="logo-placeholder-sm">{{ emp.company_name[0]|upper }}</div>
+                                                {% endif %}
+                                            </div>
+                                            <span class="company-name">{{ emp.company_name }}</span>
+                                        </div>
+                                    </td>
+                                    <td>{{ emp.user.email if emp.user else 'N/A' }}</td>
+                                    <td>{{ emp.industry or 'N/A' }}</td>
+                                    <td><span class="badge bg-primary">{{ emp.jobs|length }}</span></td>
+                                    <td>
+                                        <span class="status-badge {% if emp.is_verified %}status-active{% else %}status-pending{% endif %}">
+                                            <i class="fas fa-{% if emp.is_verified %}check-circle{% else %}clock{% endif %}"></i>
+                                            {% if emp.is_verified %}Verified{% else %}Pending{% endif %}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <div class="action-buttons">
+                                            <!-- EDIT BUTTON HATA DIYA - Sirf Verify aur Delete -->
+                                            <button class="btn btn-sm {% if emp.is_verified %}btn-warning{% else %}btn-success{% endif %}" 
+                                                    onclick="verifyEmployer({{ emp.id }})">
+                                                <i class="fas fa-{% if emp.is_verified %}times{% else %}check{% endif %}"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-danger" onclick="deleteEmployer({{ emp.id }})">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% else %}
+                            <tr>
+                                <td colspan="7" class="text-center py-4">
+                                    <div class="empty-state-small">
+                                        <i class="fas fa-building"></i>
+                                        <p>No employers registered yet</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* Same as users.html styles plus: */
+.company-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.company-logo-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.company-logo-sm img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.logo-placeholder-sm {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.status-badge.status-pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: #F59E0B;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterEmployers() {
+    const search = document.getElementById('searchEmployers').value.toLowerCase();
+    const status = document.getElementById('filterVerify').value;
+    const rows = document.querySelectorAll('.admin-table tbody tr');
+    
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const rowStatus = row.dataset.status;
+        let show = true;
+        
+        if (search && !text.includes(search)) show = false;
+        if (status && rowStatus !== status) show = false;
+        
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+function verifyEmployer(employerId) {
+    if (!confirm('Are you sure you want to change this employer\'s verification status?')) return;
+    
+    fetch(`/admin/employer/${employerId}/verify`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    })
+    .catch(error => {
+        showToast('An error occurred. Please try again.', 'danger');
+    });
+}
+
+function deleteEmployer(employerId) {
+    if (!confirm('Are you sure you want to delete this employer? This action cannot be undone.')) return;
+    
+    fetch(`/admin/employer/${employerId}/delete`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    })
+    .catch(error => {
+        showToast('An error occurred. Please try again.', 'danger');
+    });
+}
+</script>
+{% endblock %}

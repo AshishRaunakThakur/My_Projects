@@ -1,0 +1,477 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Admin{% endblock %}
+
+{% block content %}
+<!-- Admin Permission Check -->
+{% if current_user.user_type != 'admin' %}
+    <script>
+        window.location.href = "{{ url_for('dashboard') }}";
+    </script>
+{% endif %}
+
+<div class="settings-page">
+    <div class="container">
+        <div class="row g-4">
+            <!-- Sidebar -->
+            <div class="col-lg-3">
+                <div class="settings-sidebar glass-card">
+                    <div class="sidebar-header">
+                        <i class="fas fa-cog"></i>
+                        <h5>Settings</h5>
+                    </div>
+                    <div class="settings-menu">
+                        <a href="#general" class="menu-item active" onclick="showSection('general')">
+                            <i class="fas fa-globe"></i> General
+                        </a>
+                        <a href="#security" class="menu-item" onclick="showSection('security')">
+                            <i class="fas fa-shield-alt"></i> Security
+                        </a>
+                        <a href="#appearance" class="menu-item" onclick="showSection('appearance')">
+                            <i class="fas fa-palette"></i> Appearance
+                        </a>
+                        <a href="#notifications" class="menu-item" onclick="showSection('notifications')">
+                            <i class="fas fa-bell"></i> Notifications
+                        </a>
+                        <a href="#system" class="menu-item" onclick="showSection('system')">
+                            <i class="fas fa-server"></i> System
+                        </a>
+                    </div>
+                    <div class="sidebar-footer">
+                        <button class="btn btn-danger btn-sm w-100" onclick="showToast('Are you sure?', 'warning')">
+                            <i class="fas fa-exclamation-triangle"></i> Reset All Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Settings Content -->
+            <div class="col-lg-9">
+                <!-- General Settings -->
+                <div class="settings-section glass-card" id="general">
+                    <div class="section-header">
+                        <h3><i class="fas fa-globe" style="color: var(--primary-color);"></i> General Settings</h3>
+                        <p class="section-subtitle">Configure general platform settings</p>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('admin_settings') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                        <input type="hidden" name="section" value="general">
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-building"></i> Platform Name</label>
+                            <input type="text" class="form-control" value="Ashmeera Empowers" disabled>
+                            <small class="text-muted">Platform name cannot be changed</small>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-tagline"></i> Tagline</label>
+                            <input type="text" class="form-control" value="Empowering Abilities, Creating Opportunities" disabled>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-envelope"></i> Support Email</label>
+                            <input type="email" class="form-control" value="support@ashmeera.com" placeholder="support@ashmeera.com">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-phone"></i> Support Phone</label>
+                            <input type="tel" class="form-control" value="+91-123-456-7890" placeholder="+91-123-456-7890">
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Security Settings -->
+                <div class="settings-section glass-card" id="security" style="display: none;">
+                    <div class="section-header">
+                        <h3><i class="fas fa-shield-alt" style="color: var(--primary-color);"></i> Security Settings</h3>
+                        <p class="section-subtitle">Configure security and authentication settings</p>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('admin_settings') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                        <input type="hidden" name="section" value="security">
+                        
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" id="two_factor" class="form-check-input" checked>
+                                <label for="two_factor" class="form-check-label">
+                                    <i class="fas fa-lock"></i> Two-Factor Authentication
+                                </label>
+                                <small class="d-block text-muted">Require 2FA for all admin accounts</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" id="session_timeout" class="form-check-input" checked>
+                                <label for="session_timeout" class="form-check-label">
+                                    <i class="fas fa-clock"></i> Session Timeout
+                                </label>
+                                <small class="d-block text-muted">Automatically logout after 30 minutes of inactivity</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" id="login_attempts" class="form-check-input" checked>
+                                <label for="login_attempts" class="form-check-label">
+                                    <i class="fas fa-ban"></i> Login Attempts Limiting
+                                </label>
+                                <small class="d-block text-muted">Limit failed login attempts to 5 per hour</small>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Appearance Settings -->
+                <div class="settings-section glass-card" id="appearance" style="display: none;">
+                    <div class="section-header">
+                        <h3><i class="fas fa-palette" style="color: var(--primary-color);"></i> Appearance Settings</h3>
+                        <p class="section-subtitle">Customize the platform appearance</p>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('admin_settings') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                        <input type="hidden" name="section" value="appearance">
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-moon"></i> Default Theme</label>
+                            <select class="form-control">
+                                <option value="light">Light Mode</option>
+                                <option value="dark">Dark Mode</option>
+                                <option value="system">System Default</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-paint-brush"></i> Primary Color</label>
+                            <div class="color-picker">
+                                <input type="color" class="form-control-color" value="#6C3CE1">
+                                <span class="color-hex">#6C3CE1</span>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label><i class="fas fa-font"></i> Font Size</label>
+                            <select class="form-control">
+                                <option value="small">Small</option>
+                                <option value="medium" selected>Medium</option>
+                                <option value="large">Large</option>
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Notification Settings -->
+                <div class="settings-section glass-card" id="notifications" style="display: none;">
+                    <div class="section-header">
+                        <h3><i class="fas fa-bell" style="color: var(--primary-color);"></i> Notification Settings</h3>
+                        <p class="section-subtitle">Configure notification preferences</p>
+                    </div>
+                    
+                    <form method="POST" action="{{ url_for('admin_settings') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+                        <input type="hidden" name="section" value="notifications">
+                        
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" id="email_notifications" class="form-check-input" checked>
+                                <label for="email_notifications" class="form-check-label">
+                                    <i class="fas fa-envelope"></i> Email Notifications
+                                </label>
+                                <small class="d-block text-muted">Receive system notifications via email</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" id="push_notifications" class="form-check-input" checked>
+                                <label for="push_notifications" class="form-check-label">
+                                    <i class="fas fa-bell"></i> Push Notifications
+                                </label>
+                                <small class="d-block text-muted">Receive browser notifications</small>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" id="weekly_digest" class="form-check-input">
+                                <label for="weekly_digest" class="form-check-label">
+                                    <i class="fas fa-calendar-week"></i> Weekly Digest
+                                </label>
+                                <small class="d-block text-muted">Receive weekly platform summary</small>
+                            </div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save Changes
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- System Settings -->
+                <div class="settings-section glass-card" id="system" style="display: none;">
+                    <div class="section-header">
+                        <h3><i class="fas fa-server" style="color: var(--primary-color);"></i> System Settings</h3>
+                        <p class="section-subtitle">View and manage system configuration</p>
+                    </div>
+                    
+                    <div class="system-info">
+                        <div class="info-row">
+                            <span class="info-label">Python Version</span>
+                            <span class="info-value">3.8.10</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Flask Version</span>
+                            <span class="info-value">2.3.3</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Database</span>
+                            <span class="info-value">SQLite 3</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Total Users</span>
+                            <span class="info-value">{{ total_users if total_users else 'N/A' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Total Jobs</span>
+                            <span class="info-value">{{ total_jobs if total_jobs else 'N/A' }}</span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Server Status</span>
+                            <span class="info-value status-online">
+                                <i class="fas fa-circle"></i> Online
+                            </span>
+                        </div>
+                        <div class="info-row">
+                            <span class="info-label">Last Backup</span>
+                            <span class="info-value">{{ now.strftime('%b %d, %Y %I:%M %p') if now else 'Never' }}</span>
+                        </div>
+                    </div>
+                    
+                    <div class="system-actions">
+                        <button class="btn btn-outline-primary" onclick="showToast('Database backup initiated!', 'success')">
+                            <i class="fas fa-database"></i> Backup Database
+                        </button>
+                        <button class="btn btn-outline-warning" onclick="showToast('Cache cleared successfully!', 'success')">
+                            <i class="fas fa-broom"></i> Clear Cache
+                        </button>
+                        <button class="btn btn-outline-danger" onclick="showToast('Are you sure? This will restart the server.', 'warning')">
+                            <i class="fas fa-sync"></i> Restart Server
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.settings-page {
+    padding: 24px 0 60px;
+}
+
+.settings-sidebar {
+    padding: 24px;
+    border-radius: 16px;
+}
+
+.sidebar-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+    margin-bottom: 16px;
+}
+
+.sidebar-header i {
+    font-size: 24px;
+    color: var(--primary-color);
+}
+
+.sidebar-header h5 {
+    margin: 0;
+    font-weight: 700;
+}
+
+.settings-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.settings-menu .menu-item {
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.settings-menu .menu-item:hover {
+    background: rgba(108, 60, 225, 0.05);
+    color: var(--text-primary);
+}
+
+.settings-menu .menu-item.active {
+    background: rgba(108, 60, 225, 0.1);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.settings-menu .menu-item i {
+    width: 20px;
+}
+
+.sidebar-footer {
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.settings-section {
+    padding: 28px;
+    border-radius: 16px;
+    margin-bottom: 20px;
+}
+
+.section-header {
+    margin-bottom: 24px;
+}
+
+.section-header h3 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+}
+
+.section-subtitle {
+    color: var(--text-secondary);
+    margin: 4px 0 0;
+}
+
+.color-picker {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.form-control-color {
+    width: 50px;
+    height: 50px;
+    border-radius: 10px;
+    padding: 4px;
+    border: 2px solid #e2e8f0;
+    cursor: pointer;
+}
+
+.color-hex {
+    font-weight: 600;
+    font-family: monospace;
+    font-size: 14px;
+}
+
+.system-info {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+}
+
+.info-label {
+    color: var(--text-muted);
+    font-size: 13px;
+}
+
+.info-value {
+    font-weight: 500;
+    font-size: 13px;
+}
+
+.info-value.status-online {
+    color: #10B981;
+}
+
+.info-value.status-online i {
+    font-size: 10px;
+}
+
+.system-actions {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+body.dark-mode .sidebar-header {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .sidebar-footer {
+    border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .info-row {
+    background: #1e293b;
+}
+
+@media (max-width: 768px) {
+    .settings-sidebar {
+        margin-bottom: 20px;
+    }
+
+    .system-info {
+        grid-template-columns: 1fr;
+    }
+
+    .system-actions {
+        flex-direction: column;
+    }
+
+    .system-actions .btn {
+        width: 100%;
+        justify-content: center;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showSection(sectionId) {
+    document.querySelectorAll('.settings-section').forEach(s => s.style.display = 'none');
+    document.getElementById(sectionId).style.display = 'block';
+    
+    document.querySelectorAll('.settings-menu .menu-item').forEach(item => {
+        item.classList.remove('active');
+    });
+    document.querySelector(`.settings-menu .menu-item[href="#${sectionId}"]`).classList.add('active');
+}
+</script>
+{% endblock %}

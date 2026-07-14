@@ -1,0 +1,1142 @@
+{% extends "base.html" %}
+
+{% block title %}Find Jobs - Ashmeera Empowers{% endblock %}
+
+{% block content %}
+<div class="jobs-page">
+    <!-- Hero Section -->
+    <div class="jobs-hero">
+        <div class="container">
+            <div class="row align-items-center">
+                <div class="col-lg-8 mx-auto text-center">
+                    <div class="hero-badge">
+                        <i class="fas fa-briefcase"></i>
+                        {{ jobs.total }} Jobs Available
+                    </div>
+                    <h1 class="hero-title">Find Your <span class="gradient-text">Dream Job</span></h1>
+                    <p class="hero-subtitle">Discover inclusive opportunities from verified employers</p>
+                </div>
+            </div>
+            
+            <!-- Search Bar -->
+            <div class="search-wrapper">
+                <form method="GET" action="{{ url_for('user_jobs') }}" class="search-form">
+                    <div class="search-input-group">
+                        <div class="search-icon">
+                            <i class="fas fa-search"></i>
+                        </div>
+                        <input type="text" name="search" class="search-input" 
+                               placeholder="Search jobs, keywords, companies..." 
+                               value="{{ search }}">
+                        <button type="submit" class="search-btn">
+                            <i class="fas fa-arrow-right"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Advanced Filters -->
+                    <div class="filters-row">
+                        <div class="filter-group">
+                            <select name="category" class="filter-select" onchange="this.form.submit()">
+                                <option value="">All Categories</option>
+                                {% for cat in categories %}
+                                    <option value="{{ cat }}" {% if category == cat %}selected{% endif %}>
+                                        {{ cat }}
+                                    </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <input type="text" name="location" class="filter-input" 
+                                   placeholder="Location" value="{{ location }}">
+                        </div>
+                        
+                        <div class="filter-group">
+                            <select name="job_type" class="filter-select" onchange="this.form.submit()">
+                                <option value="">All Types</option>
+                                <option value="Full-time" {% if job_type == 'Full-time' %}selected{% endif %}>Full-time</option>
+                                <option value="Part-time" {% if job_type == 'Part-time' %}selected{% endif %}>Part-time</option>
+                                <option value="Contract" {% if job_type == 'Contract' %}selected{% endif %}>Contract</option>
+                                <option value="Internship" {% if job_type == 'Internship' %}selected{% endif %}>Internship</option>
+                                <option value="Freelance" {% if job_type == 'Freelance' %}selected{% endif %}>Freelance</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group">
+                            <select name="experience" class="filter-select" onchange="this.form.submit()">
+                                <option value="">All Experience</option>
+                                <option value="Entry" {% if experience == 'Entry' %}selected{% endif %}>Entry Level</option>
+                                <option value="Mid" {% if experience == 'Mid' %}selected{% endif %}>Mid Level</option>
+                                <option value="Senior" {% if experience == 'Senior' %}selected{% endif %}>Senior Level</option>
+                            </select>
+                        </div>
+                        
+                        <div class="filter-group toggle-group">
+                            <label class="toggle-label">
+                                <input type="checkbox" name="work_from_home" value="true" 
+                                       {% if work_from_home %}checked{% endif %}
+                                       onchange="this.form.submit()">
+                                <span class="toggle-slider"></span>
+                                <span class="toggle-text">🏠 WFH</span>
+                            </label>
+                        </div>
+                    </div>
+                    
+                    <!-- Active Filters -->
+                    {% if search or category or location or job_type or experience or work_from_home %}
+                        <div class="active-filters">
+                            <span class="filter-label">Active Filters:</span>
+                            {% if search %}
+                                <span class="filter-tag">
+                                    {{ search }}
+                                    <a href="{{ url_for('user_jobs', category=category, location=location, job_type=job_type, experience=experience, work_from_home=work_from_home) }}" class="remove-filter">×</a>
+                                </span>
+                            {% endif %}
+                            {% if category %}
+                                <span class="filter-tag">
+                                    {{ category }}
+                                    <a href="{{ url_for('user_jobs', search=search, location=location, job_type=job_type, experience=experience, work_from_home=work_from_home) }}" class="remove-filter">×</a>
+                                </span>
+                            {% endif %}
+                            {% if location %}
+                                <span class="filter-tag">
+                                    📍 {{ location }}
+                                    <a href="{{ url_for('user_jobs', search=search, category=category, job_type=job_type, experience=experience, work_from_home=work_from_home) }}" class="remove-filter">×</a>
+                                </span>
+                            {% endif %}
+                            {% if job_type %}
+                                <span class="filter-tag">
+                                    {{ job_type }}
+                                    <a href="{{ url_for('user_jobs', search=search, category=category, location=location, experience=experience, work_from_home=work_from_home) }}" class="remove-filter">×</a>
+                                </span>
+                            {% endif %}
+                            {% if experience %}
+                                <span class="filter-tag">
+                                    {{ experience }}
+                                    <a href="{{ url_for('user_jobs', search=search, category=category, location=location, job_type=job_type, work_from_home=work_from_home) }}" class="remove-filter">×</a>
+                                </span>
+                            {% endif %}
+                            {% if work_from_home %}
+                                <span class="filter-tag">
+                                    🏠 Work From Home
+                                    <a href="{{ url_for('user_jobs', search=search, category=category, location=location, job_type=job_type, experience=experience) }}" class="remove-filter">×</a>
+                                </span>
+                            {% endif %}
+                            <a href="{{ url_for('user_jobs') }}" class="clear-filters">Clear All</a>
+                        </div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Jobs Listing -->
+    <div class="jobs-listing">
+        <div class="container">
+            <!-- Results Header -->
+            <div class="results-header">
+                <div class="results-count">
+                    <span class="count-number">{{ jobs.total }}</span>
+                    <span class="count-text">jobs found</span>
+                </div>
+                <div class="results-actions">
+                    <button class="view-toggle" onclick="toggleView('grid')" id="gridView">
+                        <i class="fas fa-th"></i>
+                    </button>
+                    <button class="view-toggle" onclick="toggleView('list')" id="listView">
+                        <i class="fas fa-list"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Job Cards Grid -->
+            <div class="job-grid" id="jobGrid">
+                {% if jobs.items %}
+                    {% for job in jobs.items %}
+                        <div class="job-card premium-card">
+                            <div class="job-card-header">
+                                <div class="job-card-company">
+                                    <div class="company-logo">
+                                        {% set employer = job.employer %}
+                                        {% if employer and employer.company_logo %}
+                                            <img src="{{ url_for('static', filename='uploads/profiles/' + employer.company_logo) }}" alt="{{ employer.company_name }}">
+                                        {% else %}
+                                            <div class="company-logo-placeholder">
+                                                {{ job.employer.company_name[0]|upper if job.employer else 'C' }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="company-info">
+                                        <h6 class="company-name">{{ job.employer.company_name if job.employer else 'Company' }}</h6>
+                                        <span class="company-verified">
+                                            <i class="fas fa-check-circle"></i> 
+                                            {% if job.employer and job.employer.is_verified %}Verified{% else %}Verified{% endif %}
+                                        </span>
+                                    </div>
+                                </div>
+                                <button class="save-btn {% if job.id in saved_job_ids %}saved{% endif %}" 
+                                        onclick="toggleSaveJob({{ job.id }}, this)"
+                                        title="Save Job">
+                                    <i class="{% if job.id in saved_job_ids %}fas{% else %}far{% endif %} fa-bookmark"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="job-card-body">
+                                <h3 class="job-title">
+                                    <a href="{{ url_for('job_detail', job_id=job.id) }}">{{ job.title }}</a>
+                                </h3>
+                                <p class="job-description">{{ job.description[:120] }}{% if job.description|length > 120 %}...{% endif %}</p>
+                                
+                                <div class="job-tags">
+                                    <span class="tag">
+                                        <i class="fas fa-map-marker-alt"></i> {{ job.location or 'Remote' }}
+                                    </span>
+                                    <span class="tag">
+                                        <i class="fas fa-briefcase"></i> {{ job.job_type or 'Full-time' }}
+                                    </span>
+                                    <span class="tag">
+                                        <i class="fas fa-level-up-alt"></i> {{ job.experience_level or 'Entry' }}
+                                    </span>
+                                    <span class="tag">
+                                        <i class="fas fa-money-bill-wave"></i> 
+                                        {% if job.salary_min and job.salary_max %}
+                                            ₹{{ job.salary_min|format_number }} - ₹{{ job.salary_max|format_number }}
+                                        {% else %}
+                                            Competitive
+                                        {% endif %}
+                                    </span>
+                                    {% if job.work_from_home %}
+                                        <span class="tag wfh-tag">
+                                            🏠 Remote
+                                        </span>
+                                    {% endif %}
+                                    {% if job.disability_friendly %}
+                                        <span class="tag inclusive-tag">
+                                            ♿ Inclusive
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="job-card-footer">
+                                <div class="job-meta">
+                                    <span class="job-posted">
+                                        <i class="far fa-clock"></i> {{ job.days_active }} days ago
+                                    </span>
+                                    <span class="job-applicants">
+                                        <i class="fas fa-users"></i> {{ job.applicant_count }} applicants
+                                    </span>
+                                </div>
+                                <div class="job-actions">
+                                    {% if job.id in applied_job_ids %}
+                                        <span class="applied-badge">
+                                            <i class="fas fa-check-circle"></i> Applied
+                                        </span>
+                                    {% else %}
+                                        <a href="{{ url_for('job_detail', job_id=job.id) }}" class="btn btn-sm btn-primary">
+                                            Apply Now <i class="fas fa-arrow-right"></i>
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-jobs">
+                        <div class="empty-state">
+                            <i class="fas fa-search"></i>
+                            <h4>No jobs found</h4>
+                            <p>Try adjusting your search filters or check back later for new opportunities.</p>
+                            <a href="{{ url_for('user_jobs') }}" class="btn btn-primary">
+                                <i class="fas fa-undo"></i> Clear Filters
+                            </a>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if jobs.pages > 1 %}
+                <div class="pagination-wrapper">
+                    <nav class="pagination-nav">
+                        {% if jobs.has_prev %}
+                            <a href="{{ url_for('user_jobs', page=jobs.prev_num, search=search, category=category, location=location, job_type=job_type, experience=experience, work_from_home=work_from_home) }}" 
+                               class="page-btn prev">
+                                <i class="fas fa-chevron-left"></i> Previous
+                            </a>
+                        {% endif %}
+                        
+                        <div class="page-numbers">
+                            {% for page_num in jobs.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                                {% if page_num %}
+                                    {% if page_num == jobs.page %}
+                                        <span class="page-number active">{{ page_num }}</span>
+                                    {% else %}
+                                        <a href="{{ url_for('user_jobs', page=page_num, search=search, category=category, location=location, job_type=job_type, experience=experience, work_from_home=work_from_home) }}" 
+                                           class="page-number">
+                                            {{ page_num }}
+                                        </a>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="page-dots">…</span>
+                                {% endif %}
+                            {% endfor %}
+                        </div>
+                        
+                        {% if jobs.has_next %}
+                            <a href="{{ url_for('user_jobs', page=jobs.next_num, search=search, category=category, location=location, job_type=job_type, experience=experience, work_from_home=work_from_home) }}" 
+                               class="page-btn next">
+                                Next <i class="fas fa-chevron-right"></i>
+                            </a>
+                        {% endif %}
+                    </nav>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ============================================
+   Jobs Page Styles
+   ============================================ */
+
+.jobs-page {
+    padding: 0 0 60px;
+}
+
+/* Hero Section */
+.jobs-hero {
+    background: linear-gradient(135deg, rgba(108, 60, 225, 0.05) 0%, rgba(236, 72, 153, 0.05) 100%);
+    padding: 40px 0 60px;
+    position: relative;
+    overflow: hidden;
+}
+
+.jobs-hero::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 400px;
+    height: 400px;
+    background: radial-gradient(circle, rgba(108, 60, 225, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+.hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(108, 60, 225, 0.1);
+    color: var(--primary-color);
+    padding: 6px 16px;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 12px;
+}
+
+.hero-title {
+    font-size: 38px;
+    font-weight: 800;
+    margin-bottom: 8px;
+}
+
+.hero-subtitle {
+    font-size: 18px;
+    color: var(--text-secondary);
+}
+
+/* Search Form */
+.search-wrapper {
+    margin-top: 32px;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.search-form {
+    background: white;
+    border-radius: 20px;
+    padding: 24px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.search-input-group {
+    display: flex;
+    align-items: center;
+    background: var(--bg-secondary);
+    border-radius: 14px;
+    padding: 4px;
+    transition: all 0.3s ease;
+}
+
+.search-input-group:focus-within {
+    box-shadow: 0 0 0 4px rgba(108, 60, 225, 0.1);
+}
+
+.search-icon {
+    padding: 0 16px;
+    color: var(--text-muted);
+    font-size: 18px;
+}
+
+.search-input {
+    flex: 1;
+    border: none;
+    background: transparent;
+    padding: 14px 0;
+    font-size: 16px;
+    color: var(--text-primary);
+    outline: none;
+}
+
+.search-input::placeholder {
+    color: var(--text-muted);
+}
+
+.search-btn {
+    padding: 10px 20px;
+    border: none;
+    background: var(--gradient-primary);
+    color: white;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 16px;
+}
+
+.search-btn:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 16px rgba(108, 60, 225, 0.3);
+}
+
+/* Filters Row */
+.filters-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 16px;
+}
+
+.filter-group {
+    flex: 1;
+    min-width: 140px;
+}
+
+.filter-select,
+.filter-input {
+    width: 100%;
+    padding: 10px 14px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    background: white;
+    font-size: 14px;
+    color: var(--text-primary);
+    transition: all 0.3s ease;
+    appearance: none;
+    cursor: pointer;
+}
+
+.filter-select:focus,
+.filter-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(108, 60, 225, 0.1);
+    outline: none;
+}
+
+.filter-select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23475569' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 36px;
+}
+
+.toggle-group {
+    display: flex;
+    align-items: center;
+    min-width: 100px;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    user-select: none;
+}
+
+.toggle-label input {
+    display: none;
+}
+
+.toggle-slider {
+    width: 40px;
+    height: 22px;
+    background: #e2e8f0;
+    border-radius: 50px;
+    position: relative;
+    transition: all 0.3s ease;
+    flex-shrink: 0;
+}
+
+.toggle-slider::after {
+    content: '';
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.toggle-label input:checked + .toggle-slider {
+    background: var(--gradient-primary);
+}
+
+.toggle-label input:checked + .toggle-slider::after {
+    transform: translateX(18px);
+}
+
+.toggle-text {
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* Active Filters */
+.active-filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.filter-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.filter-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 12px;
+    background: rgba(108, 60, 225, 0.08);
+    color: var(--primary-color);
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.remove-filter {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-weight: 700;
+    font-size: 16px;
+    transition: all 0.2s ease;
+}
+
+.remove-filter:hover {
+    color: #EF4444;
+}
+
+.clear-filters {
+    font-size: 13px;
+    color: #EF4444;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.clear-filters:hover {
+    text-decoration: underline;
+}
+
+/* Results Header */
+.results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.results-count {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.count-number {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.count-text {
+    font-size: 16px;
+    color: var(--text-secondary);
+}
+
+.results-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.view-toggle {
+    padding: 8px 12px;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.view-toggle.active {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: rgba(108, 60, 225, 0.05);
+}
+
+.view-toggle:hover {
+    border-color: var(--primary-color);
+}
+
+/* Job Cards */
+.job-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
+}
+
+.job-card {
+    padding: 24px;
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(0, 0, 0, 0.04);
+}
+
+.job-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 48px rgba(0, 0, 0, 0.08);
+}
+
+.premium-card {
+    background: white;
+}
+
+.job-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.job-card-company {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.company-logo {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: var(--bg-secondary);
+}
+
+.company-logo img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.company-logo-placeholder {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 700;
+}
+
+.company-name {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.company-verified {
+    font-size: 12px;
+    color: #10B981;
+}
+
+.company-verified i {
+    font-size: 12px;
+}
+
+.save-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 4px;
+    transition: all 0.3s ease;
+}
+
+.save-btn:hover {
+    color: var(--primary-color);
+    transform: scale(1.1);
+}
+
+.save-btn.saved {
+    color: var(--primary-color);
+}
+
+.job-card-body {
+    flex: 1;
+}
+
+.job-title {
+    font-size: 18px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.job-title a {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.job-title a:hover {
+    color: var(--primary-color);
+}
+
+.job-description {
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 16px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+.job-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 12px;
+    padding: 4px 12px;
+    background: var(--bg-secondary);
+    border-radius: 50px;
+    color: var(--text-secondary);
+}
+
+.tag i {
+    font-size: 12px;
+}
+
+.tag.wfh-tag {
+    background: rgba(52, 211, 153, 0.1);
+    color: #34D399;
+}
+
+.tag.inclusive-tag {
+    background: rgba(108, 60, 225, 0.08);
+    color: var(--primary-color);
+}
+
+.job-card-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    margin-top: 16px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.job-meta {
+    display: flex;
+    gap: 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+}
+
+.job-meta i {
+    margin-right: 4px;
+}
+
+.job-actions {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.applied-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    background: rgba(16, 185, 129, 0.1);
+    color: #10B981;
+    border-radius: 50px;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+/* No Jobs */
+.no-jobs {
+    padding: 60px 0;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px;
+}
+
+.empty-state i {
+    font-size: 64px;
+    color: var(--text-muted);
+    opacity: 0.3;
+    margin-bottom: 16px;
+}
+
+.empty-state h4 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 8px;
+}
+
+.empty-state p {
+    color: var(--text-secondary);
+    margin-bottom: 16px;
+}
+
+/* Pagination */
+.pagination-wrapper {
+    margin-top: 40px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.pagination-nav {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+}
+
+.page-btn {
+    padding: 8px 20px;
+    border: 2px solid #e2e8f0;
+    border-radius: 10px;
+    background: transparent;
+    color: var(--text-primary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.page-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: rgba(108, 60, 225, 0.05);
+}
+
+.page-btn.prev i,
+.page-btn.next i {
+    font-size: 12px;
+}
+
+.page-numbers {
+    display: flex;
+    gap: 4px;
+}
+
+.page-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    border: 2px solid transparent;
+    color: var(--text-secondary);
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.3s ease;
+}
+
+.page-number:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.page-number.active {
+    background: var(--gradient-primary);
+    color: white;
+    border-color: transparent;
+}
+
+.page-dots {
+    display: flex;
+    align-items: center;
+    padding: 0 8px;
+    color: var(--text-muted);
+}
+
+/* Dark Mode */
+body.dark-mode .search-form {
+    background: #1e293b;
+}
+
+body.dark-mode .search-input-group {
+    background: #0f172a;
+}
+
+body.dark-mode .filter-select,
+body.dark-mode .filter-input {
+    background: #1e293b;
+    border-color: #334155;
+    color: white;
+}
+
+body.dark-mode .filter-select option {
+    background: #1e293b;
+}
+
+body.dark-mode .premium-card {
+    background: #1e293b;
+}
+
+body.dark-mode .job-card {
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .tag {
+    background: #334155;
+}
+
+body.dark-mode .active-filters {
+    border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .results-header {
+    border-bottom-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .job-card-footer {
+    border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .pagination-wrapper {
+    border-top-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .page-btn {
+    border-color: #334155;
+    color: #cbd5e1;
+}
+
+body.dark-mode .page-btn:hover {
+    border-color: var(--primary-color);
+}
+
+/* Responsive */
+@media (max-width: 992px) {
+    .hero-title {
+        font-size: 30px;
+    }
+    
+    .filters-row {
+        flex-wrap: wrap;
+    }
+    
+    .filter-group {
+        flex: 1 1 calc(50% - 6px);
+        min-width: auto;
+    }
+}
+
+@media (max-width: 768px) {
+    .jobs-hero {
+        padding: 24px 0 32px;
+    }
+    
+    .hero-title {
+        font-size: 26px;
+    }
+    
+    .search-form {
+        padding: 16px;
+    }
+    
+    .search-input {
+        font-size: 14px;
+        padding: 10px 0;
+    }
+    
+    .filter-group {
+        flex: 1 1 100%;
+    }
+    
+    .job-card-footer {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+    
+    .job-meta {
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    
+    .results-header {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+    
+    .pagination-nav {
+        flex-wrap: wrap;
+    }
+    
+    .page-numbers {
+        order: 3;
+        width: 100%;
+        justify-content: center;
+    }
+}
+
+@media (max-width: 576px) {
+    .hero-title {
+        font-size: 22px;
+    }
+    
+    .hero-subtitle {
+        font-size: 14px;
+    }
+    
+    .job-card {
+        padding: 16px;
+    }
+    
+    .job-title {
+        font-size: 16px;
+    }
+    
+    .count-number {
+        font-size: 20px;
+    }
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// View toggle (Grid/List)
+function toggleView(view) {
+    const grid = document.getElementById('jobGrid');
+    const gridBtn = document.getElementById('gridView');
+    const listBtn = document.getElementById('listView');
+    
+    if (view === 'grid') {
+        grid.classList.remove('list-view');
+        grid.classList.add('grid-view');
+        gridBtn.classList.add('active');
+        listBtn.classList.remove('active');
+    } else {
+        grid.classList.add('list-view');
+        grid.classList.remove('grid-view');
+        listBtn.classList.add('active');
+        gridBtn.classList.remove('active');
+    }
+    
+    localStorage.setItem('jobView', view);
+}
+
+// Load saved view preference
+document.addEventListener('DOMContentLoaded', function() {
+    const savedView = localStorage.getItem('jobView') || 'grid';
+    toggleView(savedView);
+});
+
+// Auto-submit form on filter change
+document.querySelectorAll('.filter-select, .filter-input').forEach(el => {
+    el.addEventListener('change', function() {
+        this.closest('form').submit();
+    });
+});
+
+// Debounce search input
+let searchTimeout;
+document.querySelector('.search-input').addEventListener('input', function() {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+        this.closest('form').submit();
+    }, 500);
+});
+
+// Toggle save job
+function toggleSaveJob(jobId, button) {
+    const isSaved = button.classList.contains('saved');
+    const method = isSaved ? 'DELETE' : 'POST';
+    
+    fetch(`/user/job/${jobId}/save`, {
+        method: 'POST',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'Content-Type': 'application/x-www-form-urlencoded'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.saved) {
+            button.classList.add('saved');
+            button.innerHTML = '<i class="fas fa-bookmark"></i>';
+            showToast('Job saved successfully!', 'success');
+        } else {
+            button.classList.remove('saved');
+            button.innerHTML = '<i class="far fa-bookmark"></i>';
+            showToast('Job removed from saved.', 'info');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('An error occurred. Please try again.', 'error');
+    });
+}
+</script>
+{% endblock %}

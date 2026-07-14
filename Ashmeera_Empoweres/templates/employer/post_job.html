@@ -1,0 +1,316 @@
+{% extends "base.html" %}
+
+{% block title %}Post a Job - Ashmeera Empowers{% endblock %}
+
+{% block content %}
+<div class="post-job-page">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="post-job-card glass-card">
+                    <div class="card-header">
+                        <div class="header-icon">
+                            <i class="fas fa-plus-circle"></i>
+                        </div>
+                        <div>
+                            <h1 class="page-title">Post a New Job</h1>
+                            <p class="page-subtitle">Create a job listing to find the perfect candidate</p>
+                        </div>
+                    </div>
+
+                    <form method="POST" action="{{ url_for('post_job') }}">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() if csrf_token else '' }}">
+
+                        <!-- Job Title -->
+                        <div class="form-group">
+                            <label for="title"><i class="fas fa-briefcase"></i> Job Title *</label>
+                            <input type="text" id="title" name="title" class="form-control" 
+                                   placeholder="e.g., Senior Python Developer" required>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="form-group">
+                            <label for="description"><i class="fas fa-align-left"></i> Job Description *</label>
+                            <textarea id="description" name="description" class="form-control" rows="6" 
+                                      placeholder="Describe the role, responsibilities, and what makes this opportunity unique..." required></textarea>
+                        </div>
+
+                        <!-- Requirements -->
+                        <div class="form-group">
+                            <label for="requirements"><i class="fas fa-list-check"></i> Requirements</label>
+                            <textarea id="requirements" name="requirements" class="form-control" rows="3" 
+                                      placeholder="List key requirements separated by commas&#10;e.g., Python, Flask, SQL, 5+ years experience"></textarea>
+                            <small class="text-muted">Separate requirements with commas</small>
+                        </div>
+
+                        <div class="row g-3">
+                            <!-- Category -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="category"><i class="fas fa-tag"></i> Category</label>
+                                    <select id="category" name="category" class="form-control">
+                                        <option value="">Select Category</option>
+                                        <option value="Technology">Technology</option>
+                                        <option value="Healthcare">Healthcare</option>
+                                        <option value="Education">Education</option>
+                                        <option value="Finance">Finance</option>
+                                        <option value="Retail">Retail</option>
+                                        <option value="Manufacturing">Manufacturing</option>
+                                        <option value="Design">Design</option>
+                                        <option value="Marketing">Marketing</option>
+                                        <option value="Sales">Sales</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Job Type -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="job_type"><i class="fas fa-clock"></i> Job Type</label>
+                                    <select id="job_type" name="job_type" class="form-control">
+                                        <option value="Full-time">Full-time</option>
+                                        <option value="Part-time">Part-time</option>
+                                        <option value="Contract">Contract</option>
+                                        <option value="Internship">Internship</option>
+                                        <option value="Freelance">Freelance</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <!-- Experience Level -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="experience_level"><i class="fas fa-level-up-alt"></i> Experience Level</label>
+                                    <select id="experience_level" name="experience_level" class="form-control">
+                                        <option value="Entry">Entry Level</option>
+                                        <option value="Mid">Mid Level</option>
+                                        <option value="Senior">Senior Level</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <!-- Location -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="location"><i class="fas fa-map-marker-alt"></i> Location</label>
+                                    <input type="text" id="location" name="location" class="form-control" 
+                                           placeholder="e.g., Mumbai, India">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row g-3">
+                            <!-- Salary Min -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="salary_min"><i class="fas fa-rupee-sign"></i> Minimum Salary</label>
+                                    <input type="number" id="salary_min" name="salary_min" class="form-control" 
+                                           placeholder="e.g., 500000">
+                                </div>
+                            </div>
+
+                            <!-- Salary Max -->
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="salary_max"><i class="fas fa-rupee-sign"></i> Maximum Salary</label>
+                                    <input type="number" id="salary_max" name="salary_max" class="form-control" 
+                                           placeholder="e.g., 1000000">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Work From Home -->
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" id="work_from_home" name="work_from_home" class="form-check-input">
+                                <label for="work_from_home" class="form-check-label">
+                                    <i class="fas fa-home"></i> Work From Home Available
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Disability Friendly -->
+                        <div class="form-group">
+                            <div class="form-check">
+                                <input type="checkbox" id="disability_friendly" name="disability_friendly" class="form-check-input" checked>
+                                <label for="disability_friendly" class="form-check-label">
+                                    <i class="fas fa-wheelchair"></i> Disability Friendly Employer
+                                    <span class="badge bg-success ms-2">Inclusive</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Submit -->
+                        <button type="submit" class="btn btn-primary btn-post">
+                            <i class="fas fa-paper-plane"></i> Post Job
+                        </button>
+                        
+                        <a href="{{ url_for('employer_dashboard') }}" class="btn btn-outline-secondary btn-cancel">
+                            <i class="fas fa-times"></i> Cancel
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.post-job-page {
+    padding: 40px 0 60px;
+}
+
+.post-job-card {
+    padding: 40px;
+    border-radius: 24px;
+}
+
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.header-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 14px;
+    background: var(--gradient-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.page-title {
+    font-size: 28px;
+    font-weight: 800;
+    margin: 0;
+}
+
+.page-subtitle {
+    color: var(--text-secondary);
+    margin: 4px 0 0;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    font-weight: 600;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+}
+
+.form-group label i {
+    color: var(--primary-color);
+}
+
+.form-control {
+    padding: 12px 16px;
+    border-radius: 12px;
+    border: 2px solid #e2e8f0;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(108, 60, 225, 0.1);
+}
+
+.form-check {
+    padding-left: 32px;
+}
+
+.form-check-input {
+    width: 18px;
+    height: 18px;
+    margin-left: -32px;
+    margin-top: 4px;
+}
+
+.form-check-input:checked {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-post {
+    padding: 14px 40px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+    background: var(--gradient-primary);
+    border: none;
+    color: white;
+    transition: all 0.3s ease;
+    margin-right: 12px;
+}
+
+.btn-post:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(108, 60, 225, 0.3);
+    color: white;
+}
+
+.btn-cancel {
+    padding: 14px 32px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+}
+
+/* Dark Mode */
+body.dark-mode .card-header {
+    border-color: rgba(255, 255, 255, 0.05);
+}
+
+body.dark-mode .form-control {
+    background: #1e293b;
+    border-color: #334155;
+    color: white;
+}
+
+body.dark-mode .form-control:focus {
+    background: #1e293b;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .post-job-card {
+        padding: 24px;
+    }
+
+    .card-header {
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .page-title {
+        font-size: 24px;
+    }
+
+    .btn-post {
+        width: 100%;
+        margin-right: 0;
+        margin-bottom: 8px;
+    }
+
+    .btn-cancel {
+        width: 100%;
+    }
+}
+</style>
+{% endblock %}
