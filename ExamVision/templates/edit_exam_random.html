@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Random Exam — {{ exam.title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { --ink:#0a0a0f; --paper:#f5f3ee; --accent:#e63946; --accent2:#457b9d; --gold:#f4a261; --card:#1a1a2e; --border:rgba(245,243,238,0.08); --muted:rgba(245,243,238,0.45); }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:'DM Sans',sans-serif; background:var(--ink); color:var(--paper); min-height:100vh; }
+        nav { padding:0 40px; height:64px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); background:rgba(10,10,15,0.98); position:sticky; top:0; z-index:100; }
+        .logo { font-family:'Syne',sans-serif; font-size:20px; font-weight:800; }
+        .logo span { color:var(--accent); }
+        .btn-back { padding:8px 20px; border-radius:8px; background:transparent; color:var(--muted); border:1px solid var(--border); text-decoration:none; transition:0.2s; }
+        .btn-back:hover { color:var(--paper); }
+        .main { max-width:1000px; margin:0 auto; padding:40px; }
+        .page-title { font-family:'Syne',sans-serif; font-size:28px; font-weight:800; margin-bottom:8px; }
+        .page-sub { color:var(--muted); margin-bottom:24px; }
+        .form-card, .set-card { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:24px; margin-bottom:20px; }
+        .set-title { font-family:'Syne',sans-serif; font-size:18px; font-weight:700; margin-bottom:16px; color:var(--accent2); }
+        .question-card { border:1px solid var(--border); border-radius:12px; padding:18px; margin-bottom:14px; position:relative; }
+        .q-num-label { font-size:13px; color:var(--muted); margin-bottom:10px; }
+        .btn-remove { position:absolute; top:10px; right:10px; background:rgba(230,57,70,0.1); border:1px solid rgba(230,57,70,0.2); color:var(--accent); padding:5px 10px; border-radius:8px; cursor:pointer; font-size:12px; }
+        .form-group { margin-bottom:14px; }
+        label { display:block; font-size:13px; color:var(--muted); margin-bottom:6px; }
+        input[type=text], textarea, select { width:100%; padding:11px 13px; border-radius:10px; border:1px solid var(--border); background:rgba(245,243,238,0.04); color:var(--paper); outline:none; font-size:14px; }
+        textarea { min-height:72px; resize:vertical; }
+        .option-row { display:flex; align-items:center; gap:10px; margin-bottom:10px; }
+        .option-label { width:30px; text-align:center; color:var(--accent2); font-weight:700; }
+        .btn-add-q { width:100%; padding:12px; border-radius:10px; border:1px dashed rgba(245,243,238,0.2); color:var(--muted); background:transparent; cursor:pointer; margin-top:8px; }
+        .btn-add-q:hover { border-color:var(--accent2); color:var(--accent2); }
+        .submit-row { display:flex; gap:12px; justify-content:flex-end; margin-top:14px; }
+        .btn-cancel { padding:12px 24px; border-radius:10px; background:transparent; border:1px solid var(--border); color:var(--muted); text-decoration:none; }
+        .btn-save { padding:12px 28px; border-radius:10px; border:none; background:var(--accent); color:white; font-weight:700; cursor:pointer; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">Exam<span>Vision</span></div>
+        <a href="/teacher/dashboard" class="btn-back">← Dashboard</a>
+    </nav>
+    <div class="main">
+        <div class="page-title">Edit Random Exam</div>
+        <div class="page-sub">{{ exam.title }} · {{ question_sets|length }} sets</div>
+
+        <form method="POST">
+            <div class="form-card">
+                <div class="form-group">
+                    <label>Exam Title</label>
+                    <input type="text" name="title" value="{{ exam.title }}" required>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <textarea name="description">{{ exam.description or '' }}</textarea>
+                </div>
+                <div class="form-group">
+                    <label>Scheduled Date</label>
+                    <input type="text" name="scheduled_date" value="{{ exam.scheduled_date.strftime('%Y-%m-%d') if exam.scheduled_date else '' }}" placeholder="YYYY-MM-DD">
+                </div>
+                <div class="form-group">
+                    <label>Start Time</label>
+                    <input type="text" name="start_time" value="{{ exam.start_time.strftime('%H:%M') if exam.start_time else '' }}" placeholder="HH:MM">
+                </div>
+                <div class="form-group">
+                    <label>End Time</label>
+                    <input type="text" name="end_time" value="{{ exam.end_time.strftime('%H:%M') if exam.end_time else '' }}" placeholder="HH:MM">
+                </div>
+                <div class="form-group">
+                    <label><input type="checkbox" name="is_active" {% if exam.is_active %}checked{% endif %}> Active</label>
+                </div>
+            </div>
+
+            {% for qset in question_sets %}
+            {% set set_questions = questions_by_set.get(qset.id, []) %}
+            <div class="set-card">
+                <div class="set-title">{{ qset.set_name }}</div>
+                <div id="set-container-{{ qset.id }}">
+                    {% for q in set_questions %}
+                    {% set opts = q.options | from_json if q.options else {} %}
+                    <div class="question-card">
+                        <div class="q-num-label">Question {{ loop.index }}</div>
+                        <button type="button" class="btn-remove" onclick="removeQuestion(this)">Remove</button>
+                        <input type="hidden" name="question_id_set_{{ qset.id }}[]" value="{{ q.id }}">
+                        <div class="form-group">
+                            <label>Question Text</label>
+                            <textarea name="question_text_set_{{ qset.id }}[]" required>{{ q.question_text }}</textarea>
+                        </div>
+                        <div class="option-row"><div class="option-label">A</div><input type="text" name="option_a_set_{{ qset.id }}[]" value="{{ opts.get('A','') }}" required></div>
+                        <div class="option-row"><div class="option-label">B</div><input type="text" name="option_b_set_{{ qset.id }}[]" value="{{ opts.get('B','') }}" required></div>
+                        <div class="option-row"><div class="option-label">C</div><input type="text" name="option_c_set_{{ qset.id }}[]" value="{{ opts.get('C','') }}" required></div>
+                        <div class="option-row"><div class="option-label">D</div><input type="text" name="option_d_set_{{ qset.id }}[]" value="{{ opts.get('D','') }}" required></div>
+                        <div class="form-group">
+                            <label>Correct Answer</label>
+                            <select name="correct_answer_set_{{ qset.id }}[]" required>
+                                <option value="">— Select —</option>
+                                {% for letter in ['A','B','C','D'] %}
+                                <option value="{{ letter }}" {% if q.correct_answer == letter %}selected{% endif %}>{{ letter }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <button type="button" class="btn-add-q" onclick="addQuestion({{ qset.id }})">+ Add Question in {{ qset.set_name }}</button>
+            </div>
+            {% endfor %}
+
+            <div class="submit-row">
+                <a href="/teacher/dashboard" class="btn-cancel">Cancel</a>
+                <button type="submit" class="btn-save">Save Changes</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function removeQuestion(btn) {
+            btn.closest('.question-card').remove();
+        }
+        function addQuestion(setId) {
+            const wrap = document.getElementById('set-container-' + setId);
+            const idx = wrap.querySelectorAll('.question-card').length + 1;
+            const div = document.createElement('div');
+            div.className = 'question-card';
+            div.innerHTML = `
+                <div class="q-num-label">Question ${idx}</div>
+                <button type="button" class="btn-remove" onclick="removeQuestion(this)">Remove</button>
+                <input type="hidden" name="question_id_set_${setId}[]" value="">
+                <div class="form-group">
+                    <label>Question Text</label>
+                    <textarea name="question_text_set_${setId}[]" required></textarea>
+                </div>
+                <div class="option-row"><div class="option-label">A</div><input type="text" name="option_a_set_${setId}[]" required></div>
+                <div class="option-row"><div class="option-label">B</div><input type="text" name="option_b_set_${setId}[]" required></div>
+                <div class="option-row"><div class="option-label">C</div><input type="text" name="option_c_set_${setId}[]" required></div>
+                <div class="option-row"><div class="option-label">D</div><input type="text" name="option_d_set_${setId}[]" required></div>
+                <div class="form-group">
+                    <label>Correct Answer</label>
+                    <select name="correct_answer_set_${setId}[]" required>
+                        <option value="">— Select —</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                </div>`;
+            wrap.appendChild(div);
+        }
+    </script>
+</body>
+</html>

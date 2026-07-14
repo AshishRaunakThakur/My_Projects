@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analysis: {{ exam.title }} — ExamVision</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --ink: #0a0a0f;
+            --paper: #f5f3ee;
+            --accent: #e63946;
+            --accent2: #457b9d;
+            --gold: #f4a261;
+            --green: #4ade80;
+            --surface: #141420;
+            --card: #1a1a2e;
+            --border: rgba(245,243,238,0.08);
+            --muted: rgba(245,243,238,0.45);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--ink); color: var(--paper); min-height: 100vh; }
+
+        nav {
+            padding: 0 40px; height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10,10,15,0.98);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+        .logo span { color: var(--accent); }
+        .btn-back {
+            padding: 8px 20px; border-radius: 8px;
+            background: transparent; color: var(--muted); border: 1px solid var(--border);
+            font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; text-decoration: none; transition: 0.2s;
+        }
+        .btn-back:hover { color: var(--paper); }
+
+        .main { max-width: 1200px; margin: 0 auto; padding: 40px; }
+        .page-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; margin-bottom: 4px; }
+        .page-sub { color: var(--muted); font-size: 14px; margin-bottom: 36px; }
+
+        .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 40px; }
+        .stat-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 24px; text-align: center;
+        }
+        .stat-icon { font-size: 28px; margin-bottom: 12px; }
+        .stat-val { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; line-height: 1; margin-bottom: 6px; }
+        .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+
+        .analysis-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 32px; }
+        .chart-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 28px;
+        }
+        .chart-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 20px; }
+
+        .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; margin-bottom: 24px; }
+        .table-wrap.scrollable { max-height: 360px; overflow: auto; }
+        .table-header { padding: 20px 24px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; }
+        .table-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+        .table-search {
+            min-width: 240px;
+            max-width: 400px;
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(245,243,238,0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--paper);
+            font-size: 13px;
+            outline: none;
+        }
+        .table-search::placeholder { color: var(--muted); }
+        table { width: 100%; border-collapse: collapse; }
+        th { padding: 12px 20px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); }
+        td { padding: 14px 20px; font-size: 14px; border-top: 1px solid var(--border); }
+        tr:hover td { background: rgba(245,243,238,0.02); }
+        .badge { padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 600; }
+        .badge-pass { background: rgba(74,222,128,0.12); color: var(--green); }
+        .badge-fail { background: rgba(230,57,70,0.12); color: var(--accent); }
+        .btn-view {
+            padding: 6px 14px; border-radius: 6px;
+            background: rgba(69,123,157,0.15); border: 1px solid rgba(69,123,157,0.3);
+            color: var(--accent2); font-size: 12px; font-weight: 500;
+            cursor: pointer; text-decoration: none; transition: 0.2s;
+            display: inline-block;
+        }
+        .btn-view:hover { background: rgba(69,123,157,0.25); }
+        
+        .btn-reenable {
+            padding: 6px 14px;
+            border-radius: 6px;
+            background: rgba(244,162,97,0.15);
+            border: 1px solid rgba(244,162,97,0.3);
+            color: var(--gold);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            transition: 0.2s;
+            margin-left: 8px;
+            display: inline-block;
+        }
+        .btn-reenable:hover {
+            background: rgba(244,162,97,0.25);
+            transform: translateY(-1px);
+        }
+        
+        .btn-reenable-all {
+            padding: 8px 20px;
+            border-radius: 8px;
+            background: rgba(244,162,97,0.15);
+            border: 1px solid rgba(244,162,97,0.3);
+            color: var(--gold);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: 0.2s;
+            display: inline-block;
+        }
+        .btn-reenable-all:hover {
+            background: rgba(244,162,97,0.25);
+            transform: translateY(-1px);
+        }
+        
+        .btn-flash-result {
+            padding: 10px 24px;
+            border-radius: 8px;
+            background: linear-gradient(135deg, var(--green), #22c55e);
+            color: white;
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            text-decoration: none;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+        }
+        .btn-flash-result:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(34,197,94,0.3);
+        }
+        .btn-flash-result.flashed {
+            background: linear-gradient(135deg, var(--accent), #c1121f);
+        }
+        .btn-flash-result.flashed:hover {
+            box-shadow: 0 8px 20px rgba(230,57,70,0.3);
+        }
+        
+        .violation-badge { padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; }
+        .vb-tab { background: rgba(244,162,97,0.12); color: var(--gold); }
+        .vb-alert { background: rgba(230,57,70,0.12); color: var(--accent); }
+        .vb-key { background: rgba(69,123,157,0.12); color: var(--accent2); }
+        .vb-other { background: rgba(245,243,238,0.06); color: var(--muted); }
+        .empty-row td { text-align: center; color: var(--muted); padding: 40px; }
+        .score-bar-bg { height: 6px; background: rgba(245,243,238,0.06); border-radius: 100px; overflow: hidden; min-width: 80px; display: inline-block; vertical-align: middle; margin-left: 8px; }
+        .score-bar-fill { height: 100%; border-radius: 100px; background: var(--accent2); }
+
+        .result-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .result-declared {
+            background: rgba(74,222,128,0.15);
+            color: var(--green);
+        }
+        .result-not-declared {
+            background: rgba(244,162,97,0.15);
+            color: var(--gold);
+        }
+        .toast-stack {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1200;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 380px;
+        }
+        .toast {
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--paper);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            animation: toast-in 0.18s ease-out;
+        }
+        .toast-success { border-color: rgba(74,222,128,0.35); color: #4ade80; }
+        .toast-danger { border-color: rgba(230,57,70,0.35); color: #f87171; }
+        .toast-warning { border-color: rgba(244,162,97,0.35); color: var(--gold); }
+        @keyframes toast-in { from { opacity: 0; transform: translateY(-6px);} to { opacity: 1; transform: translateY(0);} }
+
+        @media(max-width: 900px) {
+            .stats-row { grid-template-columns: repeat(2,1fr); }
+            .analysis-grid { grid-template-columns: 1fr; }
+            .main { padding: 20px; }
+            nav { padding: 0 20px; }
+            .table-header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">Exam<span>Vision</span></div>
+        <a href="/teacher/dashboard" class="btn-back">← Dashboard</a>
+    </nav>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="toast-stack" id="toastStack">
+            {% for category, message in messages %}
+                <div class="toast toast-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="main">
+        <div class="page-title">📊 {{ exam.title }}</div>
+        <div class="page-sub">Exam Analysis Report · {{ exam.duration }} min · {{ exam.total_marks }} marks</div>
+
+        <!-- Result Flash Button -->
+        <div style="margin-bottom: 24px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+            <div>
+                {% if exam.result_declared %}
+                    <span class="result-status result-declared">✅ Result Declared - Students can view</span>
+                {% else %}
+                    <span class="result-status result-not-declared">⏳ Result Not Declared - Hidden from students</span>
+                {% endif %}
+            </div>
+            <div>
+                {% if exam.result_declared %}
+                    <a href="/teacher/flash-result/{{ exam.id }}" 
+                       class="btn-flash-result flashed"
+                       onclick="return confirm('⚠️ Warning: This will HIDE the result from students. Are you sure?')">
+                       🔒 Hide Result from Students
+                    </a>
+                {% else %}
+                    <a href="/teacher/flash-result/{{ exam.id }}" 
+                       class="btn-flash-result"
+                       onclick="return confirm('✅ This will RELEASE the result to all students who attempted this exam. Continue?')">
+                       📢 Flash Result to Students
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-val" style="color:var(--accent2);">{{ stats.total_students }}</div>
+                <div class="stat-label">Students Attempted</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📈</div>
+                <div class="stat-val" style="color:var(--gold);">{{ "%.1f"|format(stats.average_score) }}</div>
+                <div class="stat-label">Average Score</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">✅</div>
+                <div class="stat-val" style="color:var(--green);">{{ "%.1f"|format(stats.pass_rate) }}%</div>
+                <div class="stat-label">Pass Rate</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🚨</div>
+                <div class="stat-val" style="color:var(--accent);">{{ stats.total_cheating }}</div>
+                <div class="stat-label">Total Violations</div>
+            </div>
+        </div>
+
+        <div class="analysis-grid">
+            <div class="chart-card">
+                <div class="chart-title">Score Distribution (by Percentage)</div>
+                <canvas id="scoreChart" height="200"></canvas>
+            </div>
+            <div class="chart-card">
+                <div class="chart-title">Violation Types</div>
+                <canvas id="violationChart" height="200"></canvas>
+            </div>
+        </div>
+
+        <div class="table-wrap scrollable">
+            <div class="table-header">
+                <div class="table-title">📋 Student Results</div>
+                {% if stats.total_students > 0 %}
+                <a href="/teacher/reenable-all/{{ exam.id }}" 
+                   class="btn-reenable-all" 
+                   onclick="return confirm('⚠️ WARNING: This will delete ALL students\' attempts for this exam and allow everyone to re-take it. This action cannot be undone! Are you absolutely sure?')">
+                   🔄 Re-exam All Students
+                </a>
+                {% endif %}
+                <input type="text" id="analysisResultSearch" class="table-search" placeholder="Search students, score, status..." oninput="filterTableRows('analysisResultSearch', 'analysisResultsBody')">
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Score</th>
+                        <th>Percentage</th>
+                        <th>Status</th>
+                        <th>Submitted</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody id="analysisResultsBody">
+                    {% for result in results %}
+                    {% set pct = (result.score/result.total_marks*100)|round(1) if result.total_marks > 0 else 0 %}
+                    <tr>
+                        <td><strong>{{ result.student.full_name or result.student.username }}</strong></td>
+                        <td>{{ result.score }} / {{ result.total_marks }}</td>
+                        <td>
+                            <span style="font-family:'Syne',sans-serif;font-weight:700;">{{ pct }}%</span>
+                            <span class="score-bar-bg"><span class="score-bar-fill" style="width:{{ pct }}%"></span></span>
+                        </td>
+                        <td>
+                            {% if pct >= 40 %}
+                                <span class="badge badge-pass">Pass</span>
+                            {% else %}
+                                <span class="badge badge-fail">Fail</span>
+                            {% endif %}
+                        </td>
+                        <td style="color:var(--muted);font-size:13px;">{{ result.submitted_at.strftime('%d %b %Y, %H:%M') }}</td>
+                        <td>
+                            <a href="/teacher/view-student-answers/{{ result.id }}" class="btn-view">📝 View Answers</a>
+                            <a href="/teacher/reenable-student/{{ result.student_id }}/{{ exam.id }}" 
+                               class="btn-reenable" 
+                               onclick="return confirm('⚠️ Warning: This will delete the student\'s previous attempt and allow them to re-take the exam. Are you sure?')">
+                               🔄 Re-exam
+                            </a>
+                        </td>
+                    </tr>
+                    {% else %}
+                    <tr class="empty-row"><td colspan="6">No students have taken this exam yet. </td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="table-wrap scrollable">
+            <div class="table-header">
+                <div class="table-title">🚨 Cheating Violation Logs</div>
+                <input type="text" id="analysisViolationSearch" class="table-search" placeholder="Search violation type, student, details..." oninput="filterTableRows('analysisViolationSearch', 'analysisViolationsBody')">
+            </div>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student</th>
+                        <th>Violation Type</th>
+                        <th>Details</th>
+                        <th>Timestamp</th>
+                    </tr>
+                </thead>
+                <tbody id="analysisViolationsBody">
+                    {% for log in cheating_logs %}
+                    <tr>
+                        <td><strong>{{ log.student.username }}</strong></td>
+                        <td>
+                            {% if 'tab' in log.violation_type %}
+                                <span class="violation-badge vb-tab">🔄 {{ log.violation_type }}</span>
+                            {% elif 'fullscreen' in log.violation_type or 'terminated' in log.violation_type %}
+                                <span class="violation-badge vb-alert">🚨 {{ log.violation_type }}</span>
+                            {% elif 'key' in log.violation_type %}
+                                <span class="violation-badge vb-key">⌨️ {{ log.violation_type }}</span>
+                            {% elif 'copy' in log.violation_type or 'paste' in log.violation_type %}
+                                <span class="violation-badge vb-key">📋 {{ log.violation_type }}</span>
+                            {% else %}
+                                <span class="violation-badge vb-other">⚠️ {{ log.violation_type }}</span>
+                            {% endif %}
+                        </td>
+                        <td style="color:var(--muted);font-size:13px;">{{ log.violation_details }}</td>
+                        <td style="color:var(--muted);font-size:13px;">{{ log.timestamp.strftime('%d %b %Y, %H:%M:%S') }}</td>
+                    </tr>
+                    {% else %}
+                    <tr class="empty-row"><td colspan="4">No violations recorded for this exam. 🎉</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        Chart.defaults.color = 'rgba(245,243,238,0.5)';
+        Chart.defaults.borderColor = 'rgba(245,243,238,0.06)';
+
+        // FIX: Calculate percentages for each student result
+        // This ensures graph shows distribution by PERCENTAGE, not raw score
+        const resultsData = [
+            {% for result in results %}
+                {
+                    score: {{ result.score }},
+                    total: {{ result.total_marks }},
+                    percentage: ({{ result.score }} / {{ result.total_marks }} * 100)
+                },
+            {% endfor %}
+        ];
+        
+        // Buckets based on PERCENTAGE (0-20%, 21-40%, 41-60%, 61-80%, 81-100%)
+        const buckets = ['0-20%', '21-40%', '41-60%', '61-80%', '81-100%'];
+        const counts = [0, 0, 0, 0, 0];
+        
+        resultsData.forEach(result => {
+            const pct = result.percentage;
+            if (pct <= 20) counts[0]++;
+            else if (pct <= 40) counts[1]++;
+            else if (pct <= 60) counts[2]++;
+            else if (pct <= 80) counts[3]++;
+            else counts[4]++;
+        });
+        
+        new Chart(document.getElementById('scoreChart'), {
+            type: 'bar',
+            data: {
+                labels: buckets,
+                datasets: [{
+                    label: 'Number of Students',
+                    data: counts,
+                    backgroundColor: ['#e63946', '#f4a261', '#457b9d', '#4ade80', '#22d3ee'],
+                    borderRadius: 6,
+                }]
+            },
+            options: { 
+                plugins: { 
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.raw + ' student(s)';
+                            }
+                        }
+                    }
+                }, 
+                scales: { 
+                    y: { 
+                        beginAtZero: true, 
+                        ticks: { stepSize: 1 },
+                        title: {
+                            display: true,
+                            text: 'Number of Students',
+                            color: 'rgba(245,243,238,0.5)'
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Percentage Score Range',
+                            color: 'rgba(245,243,238,0.5)'
+                        }
+                    }
+                } 
+            }
+        });
+
+        const vTypes = {};
+        {% for log in cheating_logs %}
+        vTypes['{{ log.violation_type }}'] = (vTypes['{{ log.violation_type }}'] || 0) + 1;
+        {% endfor %}
+        const vLabels = Object.keys(vTypes);
+        const vData = Object.values(vTypes);
+        new Chart(document.getElementById('violationChart'), {
+            type: 'doughnut',
+            data: {
+                labels: vLabels.length ? vLabels : ['No violations'],
+                datasets: [{
+                    data: vData.length ? vData : [1],
+                    backgroundColor: ['#e63946','#f4a261','#457b9d','#4ade80','#22d3ee'],
+                    borderWidth: 0,
+                }]
+            },
+            options: { plugins: { legend: { position: 'bottom', labels: { padding: 16 } } }, cutout: '65%' }
+        });
+        
+        function filterTableRows(inputId, bodyId) {
+            const query = (document.getElementById(inputId).value || '').toLowerCase().trim();
+            const rows = document.querySelectorAll('#' + bodyId + ' tr');
+            rows.forEach((row) => {
+                const text = (row.textContent || '').toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+        
+        window.addEventListener('load', function() {
+            document.querySelectorAll('.toast').forEach(function(toast) {
+                setTimeout(function() {
+                    toast.style.transition = 'opacity 0.2s ease';
+                    toast.style.opacity = '0';
+                    setTimeout(function() { toast.remove(); }, 220);
+                }, 1800);
+            });
+        });
+    </script>
+</body>
+</html>

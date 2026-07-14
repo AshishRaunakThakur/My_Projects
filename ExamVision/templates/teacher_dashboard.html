@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Teacher Dashboard — ExamVision</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #0a0a0f;
+            --paper: #f5f3ee;
+            --accent: #e63946;
+            --accent2: #457b9d;
+            --gold: #f4a261;
+            --green: #4ade80;
+            --surface: #141420;
+            --card: #1a1a2e;
+            --border: rgba(245,243,238,0.08);
+            --muted: rgba(245,243,238,0.45);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--ink); color: var(--paper); min-height: 100vh; }
+
+        nav {
+            padding: 0 40px; height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10,10,15,0.98);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+        .logo span { color: var(--accent); }
+        .logo-badge {
+            font-size: 11px; background: rgba(230,57,70,0.15); border: 1px solid rgba(230,57,70,0.3);
+            color: var(--accent); padding: 3px 10px; border-radius: 100px;
+            font-weight: 600; margin-left: 10px;
+        }
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .user-chip {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--card); border: 1px solid var(--border);
+            padding: 8px 16px; border-radius: 100px; cursor: pointer; transition: 0.2s;
+        }
+        .user-chip:hover { border-color: rgba(69,123,157,0.4); }
+        /* Profile Modal */
+        .prof-modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 9999; align-items: center; justify-content: center; }
+        .prof-modal-backdrop.show { display: flex; }
+        .prof-modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px; width: 100%; max-width: 500px; position: relative; }
+        .prof-modal-close { position: absolute; top: 16px; right: 20px; background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; line-height: 1; }
+        .prof-modal-close:hover { color: var(--paper); }
+        .prof-hdr { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .prof-av { width: 56px; height: 56px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: white; flex-shrink: 0; }
+        .prof-hdr-info h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+        .prof-hdr-info p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+        .pf-group { margin-bottom: 16px; }
+        .pf-group label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px; }
+        .pf-group input, .pf-group select { width: 100%; padding: 12px 14px; background: rgba(245,243,238,0.04); border: 1px solid var(--border); border-radius: 10px; color: var(--paper); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
+        .pf-group input:focus, .pf-group select:focus { border-color: var(--accent2); }
+        .pf-group select option { background: var(--card); }
+        .pf-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .btn-save-prof { width: 100%; padding: 13px; background: var(--accent); color: white; border: none; border-radius: 10px; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: 0.2s; }
+        .btn-save-prof:hover { background: #c1121f; transform: translateY(-1px); }
+        .user-av {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--accent); display: flex; align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700; color: white;
+        }
+        .user-name { font-size: 14px; }
+        .btn-link {
+            padding: 8px 18px; border-radius: 8px;
+            background: transparent; color: var(--muted); border: 1px solid var(--border);
+            font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; text-decoration: none;
+            transition: 0.2s;
+        }
+        .btn-link:hover { color: var(--accent); border-color: rgba(230,57,70,0.3); }
+
+        .main { max-width: 1200px; margin: 0 auto; padding: 40px; }
+
+        /* Stats */
+        .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 40px; }
+        .stat-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 24px;
+            position: relative; overflow: hidden;
+        }
+        .stat-card::after {
+            content: attr(data-icon);
+            position: absolute; right: 16px; bottom: 8px;
+            font-size: 40px; opacity: 0.12;
+        }
+        .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+        .stat-val { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; }
+        .c-red { color: var(--accent); }
+        .c-blue { color: var(--accent2); }
+        .c-gold { color: var(--gold); }
+        .c-green { color: var(--green); }
+
+        /* Section */
+        .section { margin-bottom: 40px; }
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; gap: 12px; flex-wrap: wrap; }
+        .section-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
+        .section-search {
+            min-width: 260px;
+            max-width: 420px;
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(245,243,238,0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--paper);
+            font-size: 13px;
+            outline: none;
+        }
+        .section-search::placeholder { color: var(--muted); }
+        .btn-create {
+            padding: 10px 24px;
+            background: var(--accent); color: white; border: none; border-radius: 8px;
+            font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+            cursor: pointer; text-decoration: none; transition: 0.2s;
+            display: inline-flex; align-items: center; gap: 8px;
+        }
+        .btn-create:hover { background: #c1121f; transform: translateY(-1px); }
+
+        /* Table */
+        .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+        .table-wrap.scrollable { max-height: 360px; overflow: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        thead { background: rgba(245,243,238,0.03); }
+        th { padding: 14px 20px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 500; }
+        td { padding: 16px 20px; font-size: 14px; border-top: 1px solid var(--border); }
+        tr:hover td { background: rgba(245,243,238,0.02); }
+        .btn-analyze {
+            padding: 6px 16px; border-radius: 6px;
+            background: rgba(69,123,157,0.15); border: 1px solid rgba(69,123,157,0.3);
+            color: var(--accent2); font-size: 13px; font-weight: 500;
+            cursor: pointer; text-decoration: none; transition: 0.2s;
+        }
+        .btn-analyze:hover { background: rgba(69,123,157,0.25); }
+        .btn-edit {
+            padding: 6px 14px; border-radius: 6px;
+            background: rgba(244,162,97,0.1); border: 1px solid rgba(244,162,97,0.25);
+            color: var(--gold); font-size: 13px; font-weight: 500;
+            cursor: pointer; text-decoration: none; transition: 0.2s; margin-left: 8px;
+        }
+        .btn-edit:hover { background: rgba(244,162,97,0.22); }
+        .btn-delete {
+            padding: 6px 14px; border-radius: 6px;
+            background: rgba(230,57,70,0.1); border: 1px solid rgba(230,57,70,0.25);
+            color: var(--accent); font-size: 13px; font-weight: 500;
+            cursor: pointer; transition: 0.2s; margin-left: 8px;
+        }
+        .btn-delete:hover { background: rgba(230,57,70,0.22); }
+        .toast-stack {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1200;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 380px;
+        }
+        .toast {
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--paper);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            animation: toast-in 0.18s ease-out;
+        }
+        .toast-success { border-color: rgba(74,222,128,0.35); color: #4ade80; }
+        .toast-danger { border-color: rgba(230,57,70,0.35); color: #f87171; }
+        .toast-warning { border-color: rgba(244,162,97,0.35); color: var(--gold); }
+        @keyframes toast-in { from { opacity: 0; transform: translateY(-6px);} to { opacity: 1; transform: translateY(0);} }
+        
+        /* Profile banner for teacher */
+        .profile-banner { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px 32px; margin-bottom: 36px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+        .pb-left { display: flex; align-items: center; gap: 20px; }
+        .pb-av { width: 52px; height: 52px; border-radius: 50%; background: var(--accent); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: white; flex-shrink: 0; }
+        .pb-name { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+        .pb-email { font-size: 13px; color: var(--muted); margin-top: 2px; }
+        .pb-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 7px; }
+        .pb-tag { padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; background: rgba(69,123,157,0.12); color: var(--accent2); border: 1px solid rgba(69,123,157,0.2); }
+        .pb-tag.designation { background: rgba(230,57,70,0.12); color: var(--accent); border-color: rgba(230,57,70,0.2); }
+        .btn-edit-profile { padding: 9px 20px; border-radius: 8px; background: transparent; color: var(--muted); border: 1px solid var(--border); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .btn-edit-profile:hover { color: var(--paper); border-color: rgba(245,243,238,0.2); }
+
+        /* Modal */
+        .modal-backdrop {
+            display: none; position: fixed; inset: 0;
+            background: rgba(0,0,0,0.7); z-index: 999;
+            align-items: center; justify-content: center;
+        }
+        .modal-backdrop.show { display: flex; }
+        .modal-box {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 36px; max-width: 420px; width: 90%;
+            text-align: center;
+        }
+        .modal-icon { font-size: 48px; margin-bottom: 16px; }
+        .modal-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+        .modal-sub { color: var(--muted); font-size: 14px; margin-bottom: 28px; line-height: 1.6; }
+        .modal-actions { display: flex; gap: 12px; justify-content: center; }
+        .btn-modal-cancel {
+            padding: 10px 28px; border-radius: 8px;
+            background: transparent; border: 1px solid var(--border);
+            color: var(--muted); font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 600;
+            cursor: pointer; transition: 0.2s;
+        }
+        .btn-modal-cancel:hover { color: var(--paper); }
+        .btn-modal-confirm {
+            padding: 10px 28px; border-radius: 8px;
+            background: var(--accent); border: none;
+            color: white; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700;
+            cursor: pointer; transition: 0.2s;
+        }
+        .btn-modal-confirm:hover { background: #c1121f; }
+        .violation-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 4px 10px; border-radius: 6px;
+            font-size: 12px; font-weight: 600;
+        }
+        .vb-tab { background: rgba(244,162,97,0.12); color: var(--gold); }
+        .vb-alert { background: rgba(230,57,70,0.12); color: var(--accent); }
+        .vb-key { background: rgba(69,123,157,0.12); color: var(--accent2); }
+        .vb-other { background: rgba(245,243,238,0.06); color: var(--muted); }
+        .empty-row td { text-align: center; color: var(--muted); padding: 40px; }
+
+        @media(max-width: 900px) {
+            nav { padding: 0 20px; }
+            .main { padding: 20px; }
+            .stats-row { grid-template-columns: repeat(2,1fr); }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div style="display:flex;align-items:center;">
+            <div class="logo">Exam<span>Vision</span></div>
+            <div class="logo-badge">TEACHER</div>
+        </div>
+        <div class="nav-right">
+            <div class="user-chip" onclick="openTeacherProfile()">
+                <div class="user-av">{{ (current_user.full_name or 'T')[0].upper() }}</div>
+                <div class="user-name">{{ current_user.full_name }}</div>
+            </div>
+            <a href="/logout" class="btn-link">Logout</a>
+        </div>
+    </nav>
+
+    <!-- Teacher Profile Modal -->
+    <div class="prof-modal-backdrop" id="teacherProfileModal">
+        <div class="prof-modal">
+            <button class="prof-modal-close" onclick="closeTeacherProfile()">✕</button>
+            <div class="prof-hdr">
+                <div class="prof-av">{{ (current_user.full_name or 'T')[0].upper() }}</div>
+                <div class="prof-hdr-info">
+                    <h3>My Profile</h3>
+                    <p>{{ current_user.username }} · Teacher</p>
+                </div>
+            </div>
+            <form method="POST" action="/profile/update">
+                <div class="pf-group">
+                    <label>Full Name</label>
+                    <input type="text" name="full_name" value="{{ current_user.full_name or '' }}" placeholder="Your full name">
+                </div>
+                <div class="pf-group">
+                    <label>Email</label>
+                    <input type="text" value="{{ current_user.email }}" disabled style="opacity:0.5;">
+                </div>
+                <div class="pf-row">
+                    <div class="pf-group">
+                        <label>Faculty <span style="font-size:10px;color:var(--muted);">(Department)</span></label>
+                        <select name="department">
+                            <option value="">— Select Faculty —</option>
+                            <option value="FOCA" {% if current_user.department == 'FOCA' %}selected{% endif %}>FOCA (Faculty of Computer Applications)</option>
+                            <option value="FOET" {% if current_user.department == 'FOET' %}selected{% endif %}>FOET (Faculty of Engineering & Technology)</option>
+                            <option value="FMS" {% if current_user.department == 'FMS' %}selected{% endif %}>FMS (Faculty of Management Studies)</option>
+                            <option value="FOP" {% if current_user.department == 'FOP' %}selected{% endif %}>FOP (Faculty of Pharmacy)</option>
+                        </select>
+                    </div>
+                    <div class="pf-group">
+                        <label>Designation</label>
+                        <select name="semester">  <!-- Reusing semester field for designation -->
+                            <option value="">— Select Designation —</option>
+                            <option value="Assistant Professor" {% if current_user.semester == 'Assistant Professor' %}selected{% endif %}>Assistant Professor</option>
+                            <option value="Associate Professor" {% if current_user.semester == 'Associate Professor' %}selected{% endif %}>Associate Professor</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="btn-save-prof">💾 Save Profile</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="main">
+
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="toast-stack" id="toastStack">
+                {% for category, message in messages %}
+                    <div class="toast toast-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Profile Banner -->
+        <div class="profile-banner">
+            <div class="pb-left">
+                <div class="pb-av">{{ (current_user.full_name or current_user.username)[0].upper() }}</div>
+                <div>
+                    <div class="pb-name">{{ current_user.full_name or current_user.username }}</div>
+                    <div class="pb-email">{{ current_user.email }}</div>
+                    <div class="pb-tags">
+                        {% if current_user.department %}
+                            <span class="pb-tag">🏛️ Faculty: {{ current_user.department }}</span>
+                        {% else %}
+                            <span class="pb-tag" style="background:rgba(244,162,97,0.12);color:var(--gold);">⚠️ Faculty not set</span>
+                        {% endif %}
+                        {% if current_user.semester %}
+                            <span class="pb-tag designation">👔 {{ current_user.semester }}</span>
+                        {% else %}
+                            <span class="pb-tag" style="background:rgba(244,162,97,0.12);color:var(--gold);">⚠️ Designation not set</span>
+                        {% endif %}
+                        <span class="pb-tag">🆔 {{ current_user.username }}</span>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-edit-profile" onclick="openTeacherProfile()">✏️ Edit Profile</button>
+        </div>
+
+        <!-- Delete Confirmation Modal -->
+        <div class="modal-backdrop" id="deleteModal">
+            <div class="modal-box">
+                <div class="modal-icon">🗑️</div>
+                <div class="modal-title">Delete Exam?</div>
+                <div class="modal-sub">
+                    You are about to delete <strong id="modal-exam-title"></strong>.<br>
+                    This will permanently remove all questions, results, and violation logs for this exam.
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-modal-cancel" onclick="closeModal()">Cancel</button>
+                    <form id="deleteForm" method="POST" style="display:inline;">
+                        <button type="submit" class="btn-modal-confirm">Yes, Delete</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-row">
+            <div class="stat-card" data-icon="📝">
+                <div class="stat-label">Total Exams</div>
+                <div class="stat-val c-blue">{{ exams|length }}</div>
+            </div>
+            <div class="stat-card" data-icon="🚨">
+                <div class="stat-label">Violations Today</div>
+                <div class="stat-val c-red">{{ cheating_logs|length }}</div>
+            </div>
+            <div class="stat-card" data-icon="👥">
+                <div class="stat-label">Active Exams</div>
+                <div class="stat-val c-green">{{ exams|selectattr('is_active')|list|length }}</div>
+            </div>
+            <div class="stat-card" data-icon="📊">
+                <div class="stat-label">Total Questions</div>
+                <div class="stat-val c-gold">—</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">📝 Your Exams</div>
+                <a href="/teacher/create-exam" class="btn-create">+ Create Exam</a>
+                <input type="text" id="teacherExamSearch" class="section-search" placeholder="Search exams by title, status, date..." oninput="filterTableRows('teacherExamSearch', 'teacherExamsBody')">
+            </div>
+            <div class="table-wrap scrollable">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Exam Title</th>
+                            <th>Schedule / Duration</th>
+                            <th>Total Marks</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacherExamsBody">
+                        {% for exam in exams %}
+                        <tr>
+                            <td><strong>{{ exam.title }}</strong></td>
+                            <td>
+                                {% if exam.scheduled_date and exam.start_time and exam.end_time %}
+                                    <span style="font-size:12px;color:var(--accent2);">📅 {{ exam.scheduled_date.strftime('%d %b %Y') }}</span><br>
+                                    <span style="font-size:13px;font-weight:600;">{{ exam.start_time.strftime('%H:%M') }} – {{ exam.end_time.strftime('%H:%M') }}</span><br>
+                                    <span style="font-size:11px;color:var(--muted);">{{ exam.duration }} min</span>
+                                {% else %}
+                                    {{ exam.duration }} min
+                                {% endif %}
+                            </td>
+                            <td>{{ exam.total_marks }}</td>
+                            <td>
+                                {% if exam.is_active %}
+                                    <span style="color:#4ade80;font-size:13px;">● Active</span>
+                                {% else %}
+                                    <span style="color:var(--muted);font-size:13px;">● Inactive</span>
+                                {% endif %}
+                            </td>
+                            <td style="color:var(--muted);">{{ exam.created_at.strftime('%d %b %Y') }}</td>
+                            <td>
+                                <a href="/teacher/exam-analysis/{{ exam.id }}" class="btn-analyze">View Analysis →</a>
+                                <a href="/teacher/edit-exam/{{ exam.id }}" class="btn-edit">✏️ Edit</a>
+                                <button class="btn-delete" onclick="confirmDelete({{ exam.id }}, '{{ exam.title|replace("'", "\\'") }}')">🗑 Delete</button>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="empty-row">No exams created yet. <a href="/teacher/create-exam" style="color:var(--accent);">Create your first exam →</a></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">🚨 Recent Cheating Alerts</div>
+                <div style="font-size:13px;color:var(--muted);">Last 20 violations</div>
+                <input type="text" id="teacherAlertSearch" class="section-search" placeholder="Search alerts by student, type, details..." oninput="filterTableRows('teacherAlertSearch', 'teacherAlertsBody')">
+            </div>
+            <div class="table-wrap scrollable">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Violation</th>
+                            <th>Details</th>
+                            <th>Timestamp</th>
+                        </tr>
+                    </thead>
+                    <tbody id="teacherAlertsBody">
+                        {% for log in cheating_logs %}
+                        <tr>
+                            <td><strong>{{ log.student.username }}</strong></td>
+                            <td>
+                                {% if 'tab' in log.violation_type %}
+                                    <span class="violation-badge vb-tab">🔄 {{ log.violation_type }}</span>
+                                {% elif 'fullscreen' in log.violation_type or 'terminated' in log.violation_type %}
+                                    <span class="violation-badge vb-alert">🚨 {{ log.violation_type }}</span>
+                                {% elif 'copy' in log.violation_type or 'paste' in log.violation_type %}
+                                    <span class="violation-badge vb-key">📋 {{ log.violation_type }}</span>
+                                {% else %}
+                                    <span class="violation-badge vb-other">⚠️ {{ log.violation_type }}</span>
+                                {% endif %}
+                            </td>
+                            <td style="color:var(--muted);font-size:13px;">{{ log.violation_details }}</td>
+                            <td style="color:var(--muted);font-size:13px;">{{ log.timestamp.strftime('%d %b %Y, %H:%M:%S') }}</td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="empty-row">No violations detected yet. 🎉</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function confirmDelete(examId, examTitle) {
+            document.getElementById('modal-exam-title').textContent = examTitle;
+            document.getElementById('deleteForm').action = '/teacher/delete-exam/' + examId;
+            document.getElementById('deleteModal').classList.add('show');
+        }
+        function closeModal() {
+            document.getElementById('deleteModal').classList.remove('show');
+        }
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) closeModal();
+        });
+        
+        function openTeacherProfile() { 
+            document.getElementById('teacherProfileModal').classList.add('show'); 
+        }
+        function closeTeacherProfile() { 
+            document.getElementById('teacherProfileModal').classList.remove('show'); 
+        }
+        function filterTableRows(inputId, bodyId) {
+            const query = (document.getElementById(inputId).value || '').toLowerCase().trim();
+            const rows = document.querySelectorAll('#' + bodyId + ' tr');
+            rows.forEach((row) => {
+                const text = (row.textContent || '').toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+        document.getElementById('teacherProfileModal').addEventListener('click', function(e) {
+            if (e.target === this) closeTeacherProfile();
+        });
+        
+        // Show profile modal if faculty or designation not set
+        {% if not current_user.department or not current_user.semester %}
+        window.addEventListener('load', function() { 
+            setTimeout(openTeacherProfile, 800); 
+        });
+        {% endif %}
+        window.addEventListener('load', function() {
+            document.querySelectorAll('.toast').forEach(function(toast) {
+                setTimeout(function() {
+                    toast.style.transition = 'opacity 0.2s ease';
+                    toast.style.opacity = '0';
+                    setTimeout(function() { toast.remove(); }, 220);
+                }, 1800);
+            });
+        });
+    </script>
+</body>
+</html>

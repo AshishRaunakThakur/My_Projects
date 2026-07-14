@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Dashboard — ExamVision</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { --ink: #0a0a0f; --paper: #f5f3ee; --accent: #e63946; --accent2: #457b9d; --gold: #f4a261; --green: #4ade80; --surface: #141420; --card: #1a1a2e; --border: rgba(245,243,238,0.08); --muted: rgba(245,243,238,0.45); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--ink); color: var(--paper); min-height: 100vh; }
+        nav { padding: 0 40px; height: 64px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: rgba(10,10,15,0.95); position: sticky; top: 0; z-index: 100; backdrop-filter: blur(20px); }
+        .logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+        .logo span { color: var(--accent); }
+        .nav-right { display: flex; align-items: center; gap: 16px; }
+        .user-chip { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border); padding: 8px 16px; border-radius: 100px; cursor: pointer; transition: 0.2s; text-decoration: none; }
+        .user-chip:hover { border-color: rgba(69,123,157,0.4); }
+        .user-avatar { width: 28px; height: 28px; border-radius: 50%; background: var(--accent2); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 700; color: white; }
+        .user-name { font-size: 14px; color: rgba(245,243,238,0.8); }
+        .btn-link {
+            padding: 8px 18px; border-radius: 8px;
+            background: transparent; color: var(--muted);
+            border: 1px solid var(--border);
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .btn-link:hover { color: var(--accent); border-color: rgba(230,57,70,0.3); }
+        .btn-logout { padding: 8px 18px; border-radius: 8px; background: transparent; color: var(--muted); border: 1px solid var(--border); font-family: 'DM Sans', sans-serif; font-size: 14px; cursor: pointer; text-decoration: none; transition: all 0.2s; }
+        .btn-logout:hover { color: var(--accent); border-color: rgba(230,57,70,0.3); }
+        .main { max-width: 1100px; margin: 0 auto; padding: 40px; }
+
+        /* Profile Modal */
+        .modal-backdrop { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.78); z-index: 9999; align-items: center; justify-content: center; }
+        .modal-backdrop.show { display: flex; }
+        .profile-modal { background: var(--card); border: 1px solid var(--border); border-radius: 20px; padding: 40px; width: 100%; max-width: 500px; position: relative; }
+        .modal-close { position: absolute; top: 16px; right: 20px; background: none; border: none; color: var(--muted); font-size: 22px; cursor: pointer; line-height: 1; }
+        .modal-close:hover { color: var(--paper); }
+        .profile-header { display: flex; align-items: center; gap: 16px; margin-bottom: 28px; padding-bottom: 20px; border-bottom: 1px solid var(--border); }
+        .profile-av { width: 56px; height: 56px; border-radius: 50%; background: linear-gradient(135deg, var(--accent2), #1d3557); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 22px; font-weight: 800; color: white; flex-shrink: 0; }
+        .profile-info-head h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+        .profile-info-head p { font-size: 13px; color: var(--muted); margin-top: 2px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 7px; }
+        .form-group input, .form-group select { width: 100%; padding: 12px 14px; background: rgba(245,243,238,0.04); border: 1px solid var(--border); border-radius: 10px; color: var(--paper); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; transition: border-color 0.2s; }
+        .form-group input:focus, .form-group select:focus { border-color: var(--accent2); }
+        .form-group select option { background: var(--card); }
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+        .dept-lock-note { font-size: 12px; color: var(--gold); margin-top: 5px; }
+        .btn-save-profile { width: 100%; padding: 13px; background: var(--accent2); color: white; border: none; border-radius: 10px; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; margin-top: 8px; transition: 0.2s; }
+        .btn-save-profile:hover { background: #1d6a8e; transform: translateY(-1px); }
+
+        /* Profile Banner */
+        .profile-banner { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px 32px; margin-bottom: 36px; display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+        .pb-left { display: flex; align-items: center; gap: 20px; }
+        .pb-av { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, var(--accent2), #1d3557); display: flex; align-items: center; justify-content: center; font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: white; flex-shrink: 0; }
+        .pb-name { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; }
+        .pb-email { font-size: 13px; color: var(--muted); margin-top: 2px; }
+        .pb-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 7px; }
+        .pb-tag { padding: 3px 10px; border-radius: 6px; font-size: 12px; font-weight: 600; background: rgba(69,123,157,0.12); color: var(--accent2); border: 1px solid rgba(69,123,157,0.2); }
+        .pb-tag.warn { background: rgba(244,162,97,0.1); color: var(--gold); border-color: rgba(244,162,97,0.25); }
+        .pb-tag.enrollment { background: rgba(74,222,128,0.1); color: var(--green); border-color: rgba(74,222,128,0.2); }
+        .btn-edit-profile { padding: 9px 20px; border-radius: 8px; background: transparent; color: var(--muted); border: 1px solid var(--border); font-family: 'DM Sans', sans-serif; font-size: 13px; cursor: pointer; transition: 0.2s; white-space: nowrap; }
+        .btn-edit-profile:hover { color: var(--paper); border-color: rgba(245,243,238,0.2); }
+
+        /* Section */
+        .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .section-title { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; }
+        .count-badge { padding: 4px 12px; border-radius: 100px; font-size: 12px; color: var(--muted); background: var(--card); border: 1px solid var(--border); }
+        .exams-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 18px; margin-bottom: 40px; }
+
+        .exam-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 26px; transition: all 0.3s; position: relative; overflow: hidden; }
+        .exam-card:hover { transform: translateY(-3px); }
+        .exam-card.live::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--green); }
+        .exam-card.upcoming::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--gold); }
+        .exam-card.missed::before { content:''; position:absolute; top:0; left:0; right:0; height:3px; background:var(--accent); }
+        .exam-card-title { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; margin-bottom: 8px; }
+        .exam-card-desc { font-size: 13px; color: var(--muted); line-height: 1.5; margin-bottom: 14px; min-height: 36px; }
+        .exam-meta { display: flex; gap: 14px; margin-bottom: 14px; flex-wrap: wrap; }
+        .exam-meta-item { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 5px; }
+        .exam-meta-item span { color: rgba(245,243,238,0.8); font-weight: 500; }
+
+        .countdown-box { background: rgba(244,162,97,0.08); border: 1px solid rgba(244,162,97,0.2); border-radius: 10px; padding: 10px 14px; margin-bottom: 12px; text-align: center; }
+        .countdown-label { font-size: 11px; color: var(--gold); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 3px; }
+        .countdown-timer { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; color: var(--gold); letter-spacing: 2px; }
+        .live-box { background: rgba(74,222,128,0.07); border: 1px solid rgba(74,222,128,0.2); border-radius: 10px; padding: 9px 14px; margin-bottom: 12px; text-align: center; font-size: 13px; color: var(--green); }
+        .missed-box { background: rgba(230,57,70,0.07); border: 1px solid rgba(230,57,70,0.2); border-radius: 10px; padding: 9px 14px; margin-bottom: 12px; text-align: center; font-size: 13px; color: var(--accent); }
+
+        .btn-start { display: block; width: 100%; padding: 11px; background: var(--accent); color: white; border: none; border-radius: 10px; font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; cursor: pointer; text-decoration: none; text-align: center; transition: all 0.2s; }
+        .btn-start:hover { background: #c1121f; }
+        .btn-start.disabled { background: rgba(245,243,238,0.07); color: var(--muted); cursor: not-allowed; border: 1px solid var(--border); pointer-events: none; }
+
+        .no-exams { grid-column: 1/-1; background: var(--card); border: 1px dashed var(--border); border-radius: 16px; padding: 48px; text-align: center; color: var(--muted); }
+        .no-exams-icon { font-size: 40px; margin-bottom: 12px; }
+
+        .toast-stack {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1200;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 380px;
+        }
+        .toast {
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--paper);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            animation: toast-in 0.18s ease-out;
+        }
+        .toast-success { border-color: rgba(74,222,128,0.35); color: #4ade80; }
+        .toast-danger { border-color: rgba(230,57,70,0.35); color: #f87171; }
+        .toast-warning { border-color: rgba(244,162,97,0.35); color: var(--gold); }
+        @keyframes toast-in { from { opacity: 0; transform: translateY(-6px);} to { opacity: 1; transform: translateY(0);} }
+
+        @media(max-width: 768px) { nav { padding: 0 20px; } .main { padding: 20px; } .profile-banner { flex-direction: column; align-items: flex-start; } }
+    </style>
+</head>
+<body>
+<nav>
+    <div class="logo">Exam<span>Vision</span></div>
+    <div class="nav-right">
+        <a href="/student/my-results" class="btn-link" style="margin-right: 8px;">📊 My Results</a>
+        <div class="user-chip" onclick="openProfile()">
+            <div class="user-avatar">{{ (current_user.full_name or current_user.username)[0].upper() }}</div>
+            <div class="user-name">{{ current_user.full_name or current_user.username }}</div>
+        </div>
+        <a href="/logout" class="btn-logout">Logout</a>
+    </div>
+</nav>
+
+<!-- Profile Modal -->
+<div class="modal-backdrop" id="profileModal">
+    <div class="profile-modal">
+        <button class="modal-close" onclick="closeProfile()">✕</button>
+        <div class="profile-header">
+            <div class="profile-av">{{ (current_user.full_name or current_user.username)[0].upper() }}</div>
+            <div class="profile-info-head">
+                <h3>My Profile</h3>
+                <p>{{ current_user.username }} · Student</p>
+            </div>
+        </div>
+        <form method="POST" action="/profile/update">
+            <div class="form-group">
+                <label>Full Name</label>
+                <input type="text" name="full_name" value="{{ current_user.full_name or '' }}" placeholder="Your full name">
+            </div>
+            <div class="form-group">
+                <label>Email</label>
+                <input type="text" value="{{ current_user.email }}" disabled style="opacity:0.5;">
+            </div>
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Department</label>
+                    {% if current_user.department %}
+                        <input type="text" value="{{ current_user.department }}" disabled style="opacity:0.6;">
+                        <input type="hidden" name="department" value="{{ current_user.department }}">
+                        <div class="dept-lock-note">🔒 Locked after first save</div>
+                    {% else %}
+                        <select name="department">
+                            <option value="">— Select —</option>
+                            {% for d in departments %}<option value="{{ d }}">{{ d }}</option>{% endfor %}
+                        </select>
+                        <div class="dept-lock-note" style="color:var(--gold);">⚠️ Cannot change later</div>
+                    {% endif %}
+                </div>
+                <div class="form-group">
+                    <label>Semester</label>
+                    <select name="semester">
+                        <option value="">— Select —</option>
+                        {% for s in semesters %}
+                        <option value="{{ s }}" {% if current_user.semester == s %}selected{% endif %}>Sem {{ s }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="form-group" id="enrollment-field">
+                <label>Enrollment Number <span style="color: var(--gold);">*Required for Random Exams</span></label>
+                <input type="text" name="enrollment_number" value="{{ current_user.enrollment_number or '' }}" placeholder="e.g., 2024CS001 or 131811">
+                <div class="dept-lock-note" style="color:var(--green);">📌 Used to assign you the same question set in random-pattern exams</div>
+            </div>
+            <button type="submit" class="btn-save-profile">💾 Save Profile</button>
+        </form>
+    </div>
+</div>
+
+<div class="main">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="toast-stack" id="toastStack">
+            {% for cat, msg in messages %}
+                <div class="toast toast-{{ cat }}">{{ msg }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Profile Banner -->
+    <div class="profile-banner">
+        <div class="pb-left">
+            <div class="pb-av">{{ (current_user.full_name or current_user.username)[0].upper() }}</div>
+            <div>
+                <div class="pb-name">{{ current_user.full_name or current_user.username }}</div>
+                <div class="pb-email">{{ current_user.email }}</div>
+                <div class="pb-tags">
+                    {% if current_user.department %}
+                        <span class="pb-tag">🏫 {{ current_user.department }}</span>
+                    {% else %}
+                        <span class="pb-tag warn">⚠️ Department not set</span>
+                    {% endif %}
+                    {% if current_user.semester %}
+                        <span class="pb-tag">📚 Semester {{ current_user.semester }}</span>
+                    {% else %}
+                        <span class="pb-tag warn">⚠️ Semester not set</span>
+                    {% endif %}
+                    {% if current_user.enrollment_number %}
+                        <span class="pb-tag enrollment">🎓 Enrollment: {{ current_user.enrollment_number }}</span>
+                    {% else %}
+                        <span class="pb-tag warn">⚠️ Enrollment number not set</span>
+                    {% endif %}
+                    <span class="pb-tag">🆔 {{ current_user.username }}</span>
+                </div>
+            </div>
+        </div>
+        <button class="btn-edit-profile" onclick="openProfile()">✏️ Edit Profile</button>
+    </div>
+
+    <!-- LIVE EXAMS -->
+    <div class="section-header">
+        <div class="section-title">🟢 Live Exams</div>
+        <div class="count-badge">{{ live_exams|length }}</div>
+    </div>
+    <div class="exams-grid">
+        {% for exam in live_exams %}
+        <div class="exam-card live">
+            <div class="exam-card-title">{{ exam.title }}</div>
+            <div class="exam-card-desc">{{ exam.description[:90] if exam.description else 'No description.' }}</div>
+            <div class="exam-meta">
+                <div class="exam-meta-item">⏱ <span>{{ exam.duration }} min</span></div>
+                <div class="exam-meta-item">⭐ <span>{{ exam.total_marks }} marks</span></div>
+                {% if exam.start_time and exam.end_time %}
+                <div class="exam-meta-item">🕐 <span>{{ exam.start_time.strftime('%H:%M') }} – {{ exam.end_time.strftime('%H:%M') }}</span></div>
+                {% endif %}
+                {% if exam.exam_type == 'random_set' %}
+                <div class="exam-meta-item" style="color: var(--gold);">🎲 Random Sets Mode</div>
+                {% endif %}
+            </div>
+            <div class="live-box">🟢 Exam is LIVE — Attempt now!</div>
+            <a href="/exam/start/{{ exam.id }}" class="btn-start">Start Exam →</a>
+        </div>
+        {% else %}
+        <div class="no-exams">
+            <div class="no-exams-icon">📡</div>
+            <div>No live exams right now.</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- UPCOMING EXAMS -->
+    <div class="section-header">
+        <div class="section-title">📅 Upcoming Exams</div>
+        <div class="count-badge">{{ upcoming_exams|length }}</div>
+    </div>
+    <div class="exams-grid">
+        {% for exam in upcoming_exams %}
+        <div class="exam-card upcoming">
+            <div class="exam-card-title">{{ exam.title }}</div>
+            <div class="exam-card-desc">{{ exam.description[:90] if exam.description else 'No description.' }}</div>
+            <div class="exam-meta">
+                <div class="exam-meta-item">⏱ <span>{{ exam.duration }} min</span></div>
+                <div class="exam-meta-item">⭐ <span>{{ exam.total_marks }} marks</span></div>
+                {% if exam.scheduled_date %}<div class="exam-meta-item">📆 <span>{{ exam.scheduled_date.strftime('%d %b %Y') }}</span></div>{% endif %}
+                {% if exam.start_time and exam.end_time %}
+                <div class="exam-meta-item">🕐 <span>{{ exam.start_time.strftime('%H:%M') }} – {{ exam.end_time.strftime('%H:%M') }}</span></div>
+                {% endif %}
+                {% if exam.exam_type == 'random_set' %}
+                <div class="exam-meta-item" style="color: var(--gold);">🎲 Random Sets Mode</div>
+                {% endif %}
+            </div>
+            <div class="countdown-box">
+                <div class="countdown-label">⏳ Starts In</div>
+                <div class="countdown-timer" id="ct-{{ exam.id }}">--:--:--</div>
+            </div>
+            {% if not current_user.enrollment_number and exam.exam_type == 'random_set' %}
+            <div class="missed-box" style="background: rgba(244,162,97,0.1); color: var(--gold);">
+                ⚠️ Set enrollment number in profile to take this exam
+            </div>
+            <a class="btn-start disabled">Set Enrollment Number First</a>
+            {% else %}
+            <a class="btn-start disabled">Exam Not Started Yet</a>
+            {% endif %}
+        </div>
+        {% else %}
+        <div class="no-exams">
+            <div class="no-exams-icon">🗓️</div>
+            <div>No upcoming exams scheduled for you.</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- MISSED EXAMS (shown for 1 day after end) -->
+    {% if missed_exams %}
+    <div class="section-header">
+        <div class="section-title">⛔ Missed Exams</div>
+        <div class="count-badge">{{ missed_exams|length }}</div>
+    </div>
+    <div class="exams-grid">
+        {% for exam in missed_exams %}
+        <div class="exam-card missed">
+            <div class="exam-card-title">{{ exam.title }}</div>
+            <div class="exam-card-desc">{{ exam.description[:90] if exam.description else 'No description.' }}</div>
+            <div class="exam-meta">
+                {% if exam.scheduled_date %}<div class="exam-meta-item">📆 <span>{{ exam.scheduled_date.strftime('%d %b %Y') }}</span></div>{% endif %}
+                {% if exam.start_time and exam.end_time %}
+                <div class="exam-meta-item">🕐 <span>{{ exam.start_time.strftime('%H:%M') }} – {{ exam.end_time.strftime('%H:%M') }}</span></div>
+                {% endif %}
+                {% if exam.exam_type == 'random_set' %}
+                <div class="exam-meta-item" style="color: var(--gold);">🎲 Random Sets Mode</div>
+                {% endif %}
+            </div>
+            <div class="missed-box">⛔ You missed this exam</div>
+            <a class="btn-start disabled">Exam Ended</a>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+</div>
+
+<script>
+    function openProfile() { document.getElementById('profileModal').classList.add('show'); }
+    function closeProfile() { document.getElementById('profileModal').classList.remove('show'); }
+    document.getElementById('profileModal').addEventListener('click', function(e) {
+        if (e.target === this) closeProfile();
+    });
+
+    // Show enrollment field for students
+    document.getElementById('enrollment-field').style.display = 'block';
+
+    // Auto-open profile if enrollment number missing
+    {% if not current_user.enrollment_number %}
+    window.addEventListener('load', function() { setTimeout(openProfile, 1000); });
+    {% elif not current_user.department or not current_user.semester %}
+    window.addEventListener('load', function() { setTimeout(openProfile, 700); });
+    {% endif %}
+
+    // Countdown timers
+    const upcomingTimings = {
+        {% for exam in upcoming_exams %}{% if exam.scheduled_date and exam.start_time %}
+        {{ exam.id }}: new Date("{{ exam.scheduled_date.strftime('%Y-%m-%d') }}T{{ exam.start_time.strftime('%H:%M') }}:00"),
+        {% endif %}{% endfor %}
+    };
+
+    function pad(n) { return String(n).padStart(2, '0'); }
+
+    function tickCountdowns() {
+        const now = new Date();
+        let needsReload = false;
+        for (const [id, startTime] of Object.entries(upcomingTimings)) {
+            const el = document.getElementById('ct-' + id);
+            if (!el) continue;
+            const ms = startTime - now;
+            if (ms <= 0) { el.textContent = '00:00:00'; needsReload = true; continue; }
+            const ts = Math.floor(ms / 1000);
+            el.textContent = pad(Math.floor(ts/3600)) + ':' + pad(Math.floor((ts%3600)/60)) + ':' + pad(ts%60);
+        }
+        if (needsReload) setTimeout(() => location.reload(), 1500);
+    }
+    tickCountdowns();
+    setInterval(tickCountdowns, 1000);
+    setInterval(() => location.reload(), 60000);
+    window.addEventListener('load', function() {
+        document.querySelectorAll('.toast').forEach(function(toast) {
+            setTimeout(function() {
+                toast.style.transition = 'opacity 0.2s ease';
+                toast.style.opacity = '0';
+                setTimeout(function() { toast.remove(); }, 220);
+            }, 1800);
+        });
+    });
+</script>
+</body>
+</html>

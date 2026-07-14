@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Questions — {{ exam.title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root { --ink: #0a0a0f; --paper: #f5f3ee; --accent: #e63946; --accent2: #457b9d; --surface: #141420; --card: #1a1a2e; --border: rgba(245,243,238,0.08); --muted: rgba(245,243,238,0.45); }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--ink); color: var(--paper); min-height: 100vh; }
+        nav { padding: 0 40px; height: 64px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border); background: rgba(10,10,15,0.98); position: sticky; top: 0; z-index: 100; }
+        .logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+        .logo span { color: var(--accent); }
+        .btn-back { padding: 8px 20px; border-radius: 8px; background: transparent; color: var(--muted); border: 1px solid var(--border); text-decoration: none; transition: 0.2s; }
+        .btn-back:hover { color: var(--paper); }
+        .main { max-width: 900px; margin: 0 auto; padding: 40px; }
+        .page-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+        .page-sub { color: var(--muted); margin-bottom: 24px; }
+        .set-tabs { display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap; border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+        .set-tab { padding: 10px 24px; border-radius: 8px; background: transparent; border: 1px solid var(--border); color: var(--muted); cursor: pointer; transition: 0.2s; }
+        .set-tab.active { background: var(--accent2); color: white; border-color: var(--accent2); }
+        .set-content { display: none; }
+        .set-content.active { display: block; }
+        .question-card { background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 28px; margin-bottom: 20px; position: relative; }
+        .q-num-label { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; color: var(--accent2); margin-bottom: 16px; }
+        .marks-badge { display: inline-block; background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.2); padding: 4px 12px; border-radius: 100px; font-size: 12px; color: #4ade80; margin-left: 12px; }
+        .form-group { margin-bottom: 18px; }
+        label { display: block; font-size: 13px; font-weight: 500; color: var(--muted); margin-bottom: 8px; }
+        input[type=text], textarea, select { width: 100%; padding: 12px 16px; background: rgba(245,243,238,0.04); border: 1px solid var(--border); border-radius: 10px; color: var(--paper); font-family: 'DM Sans', sans-serif; font-size: 14px; outline: none; }
+        select option { background: var(--card); color: var(--paper); }
+        textarea { resize: vertical; min-height: 80px; }
+        .option-row { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .option-label { width: 32px; height: 32px; border-radius: 8px; background: rgba(69,123,157,0.15); border: 1px solid rgba(69,123,157,0.3); display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--accent2); }
+        .btn-remove { position: absolute; top: 20px; right: 20px; background: rgba(230,57,70,0.1); border: 1px solid rgba(230,57,70,0.2); color: var(--accent); padding: 6px 14px; border-radius: 8px; font-size: 12px; cursor: pointer; transition: 0.2s; }
+        .btn-remove:hover { background: rgba(230,57,70,0.2); }
+        .btn-add-q { width: 100%; padding: 16px; background: transparent; border: 1px dashed rgba(245,243,238,0.2); border-radius: 12px; color: var(--muted); font-size: 15px; cursor: pointer; transition: 0.2s; margin-bottom: 24px; }
+        .btn-add-q:hover { border-color: var(--accent2); color: var(--accent2); }
+        .submit-row { display: flex; gap: 16px; justify-content: flex-end; margin-top: 24px; }
+        .btn-cancel { padding: 14px 32px; border-radius: 10px; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; text-decoration: none; }
+        .btn-save { padding: 14px 40px; border-radius: 10px; background: var(--accent); border: none; color: white; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-save:hover { background: #c1121f; transform: translateY(-1px); }
+        .info-note { background: rgba(69,123,157,0.08); border: 1px solid rgba(69,123,157,0.2); border-radius: 10px; padding: 12px 16px; margin-bottom: 20px; font-size: 13px; color: var(--accent2); display: flex; align-items: center; gap: 10px; }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">Exam<span>Vision</span></div>
+        <a href="/teacher/dashboard" class="btn-back">← Dashboard</a>
+    </nav>
+
+    <div class="main">
+        <div class="page-title">Add Questions</div>
+        <div class="page-sub">{{ exam.title }} • Random Sets Exam ({{ question_sets|length }} Sets)</div>
+
+        <div class="info-note">
+            Each question is worth <strong>1 mark</strong>. Students will be randomly assigned to a set based on their enrollment number.
+        </div>
+
+        <form method="POST">
+            <div class="set-tabs" id="setTabs">
+                {% for qset in question_sets %}
+                <button type="button" class="set-tab {% if loop.first %}active{% endif %}" data-set="{{ qset.id }}">
+                    {{ qset.set_name }}
+                </button>
+                {% endfor %}
+            </div>
+
+            {% for qset in question_sets %}
+            <div class="set-content {% if loop.first %}active{% endif %}" id="set-content-{{ qset.id }}">
+                <div class="questions-container" id="questions-container-{{ qset.id }}"></div>
+                <button type="button" class="btn-add-q" onclick="addQuestion({{ qset.id }})">+ Add Question to {{ qset.set_name }}</button>
+            </div>
+            {% endfor %}
+
+            <div class="submit-row">
+                <a href="/teacher/dashboard" class="btn-cancel">Cancel</a>
+                <button type="submit" class="btn-save">Save All Questions →</button>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        // Store question counts per set
+        let qCounts = {};
+        {% for qset in question_sets %}
+        qCounts[{{ qset.id }}] = 0;
+        {% endfor %}
+
+        // Tab switching
+        document.querySelectorAll('.set-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.set-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                document.querySelectorAll('.set-content').forEach(c => c.classList.remove('active'));
+                const setId = this.getAttribute('data-set');
+                document.getElementById('set-content-' + setId).classList.add('active');
+            });
+        });
+
+        function addQuestion(setId) {
+            qCounts[setId]++;
+            const container = document.getElementById('questions-container-' + setId);
+            const div = document.createElement('div');
+            const currentCount = qCounts[setId];
+            div.className = 'question-card';
+            div.id = `q-${setId}-${currentCount}`;
+            div.innerHTML = `
+                <div class="q-num-label">Question ${currentCount} <span class="marks-badge">1 Mark</span></div>
+                <button type="button" class="btn-remove" onclick="removeQuestion(${setId}, ${currentCount})">Remove</button>
+                <div class="form-group">
+                    <label>Question Text *</label>
+                    <textarea name="question_text_set_${setId}[]" rows="2" placeholder="Enter your question here..." required></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Option A</label>
+                    <input type="text" name="option_a_set_${setId}[]" placeholder="Option A" required>
+                </div>
+                <div class="form-group">
+                    <label>Option B</label>
+                    <input type="text" name="option_b_set_${setId}[]" placeholder="Option B" required>
+                </div>
+                <div class="form-group">
+                    <label>Option C</label>
+                    <input type="text" name="option_c_set_${setId}[]" placeholder="Option C" required>
+                </div>
+                <div class="form-group">
+                    <label>Option D</label>
+                    <input type="text" name="option_d_set_${setId}[]" placeholder="Option D" required>
+                </div>
+                <div class="form-group">
+                    <label>Correct Answer *</label>
+                    <select name="correct_answer_set_${setId}[]" required>
+                        <option value="">— Select —</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function removeQuestion(setId, qNum) {
+            const element = document.getElementById(`q-${setId}-${qNum}`);
+            if (element) element.remove();
+            
+            // Renumber remaining questions for this set
+            const container = document.getElementById('questions-container-' + setId);
+            const cards = container.querySelectorAll('.question-card');
+            cards.forEach((card, idx) => {
+                const numLabel = card.querySelector('.q-num-label');
+                if (numLabel) {
+                    numLabel.innerHTML = `Question ${idx + 1} <span class="marks-badge">1 Mark</span>`;
+                }
+                const newId = `q-${setId}-${idx + 1}`;
+                card.id = newId;
+                const removeBtn = card.querySelector('.btn-remove');
+                if (removeBtn) {
+                    removeBtn.setAttribute('onclick', `removeQuestion(${setId}, ${idx + 1})`);
+                }
+            });
+            qCounts[setId] = cards.length;
+        }
+
+        // Add first question for each set
+        {% for qset in question_sets %}
+        addQuestion({{ qset.id }});
+        {% endfor %}
+    </script>
+</body>
+</html>

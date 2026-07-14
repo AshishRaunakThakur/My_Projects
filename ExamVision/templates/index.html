@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExamVision — Secure Online Examination System</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #0a0a0f;
+            --paper: #f5f3ee;
+            --accent: #e63946;
+            --accent2: #457b9d;
+            --gold: #f4a261;
+            --green: #4ade80;
+            --surface: #1a1a2e;
+            --muted: #6b7280;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--ink);
+            color: var(--paper);
+            overflow-x: hidden;
+        }
+        /* Animated gradient background */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(circle at 20% 50%, rgba(69,123,157,0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(230,57,70,0.05) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Scroll animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(50px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.6; }
+            50% { opacity: 1; }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        nav {
+            position: fixed; top: 0; width: 100%; z-index: 100;
+            padding: 20px 60px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid rgba(245,243,238,0.08);
+            backdrop-filter: blur(20px);
+            background: rgba(10,10,15,0.8);
+            animation: fadeIn 0.8s ease;
+        }
+        .logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 24px; font-weight: 800;
+            letter-spacing: -0.5px;
+            background: linear-gradient(135deg, var(--paper) 0%, var(--accent2) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .logo span { 
+            background: linear-gradient(135deg, var(--accent) 0%, var(--gold) 100%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+        .nav-links { display: flex; gap: 12px; }
+        .btn-nav {
+            padding: 10px 24px;
+            border-radius: 10px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 14px; font-weight: 500;
+            cursor: pointer; text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        .btn-ghost { 
+            background: transparent; color: var(--paper); 
+            border: 1px solid rgba(245,243,238,0.2);
+        }
+        .btn-ghost:hover { 
+            background: rgba(245,243,238,0.1); 
+            transform: translateY(-2px);
+            border-color: rgba(245,243,238,0.4);
+        }
+        .btn-solid { 
+            background: linear-gradient(135deg, var(--accent), #c1121f);
+            color: white; 
+            border: none;
+            box-shadow: 0 4px 15px rgba(230,57,70,0.3);
+        }
+        .btn-solid:hover { 
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(230,57,70,0.4);
+        }
+
+        /* Hero */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            padding: 120px 60px 80px;
+            position: relative;
+        }
+        .hero-grid {
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 80px; align-items: center; max-width: 1200px; margin: 0 auto; width: 100%;
+        }
+        .hero-badge {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(230,57,70,0.12);
+            border: 1px solid rgba(230,57,70,0.3);
+            padding: 6px 18px; border-radius: 100px;
+            font-size: 13px; color: var(--accent); margin-bottom: 28px;
+            animation: pulse 2s infinite;
+        }
+        .hero-badge::before { content: '●'; margin-right: 6px; }
+        h1 {
+            font-family: 'Syne', sans-serif;
+            font-size: clamp(42px, 5vw, 72px);
+            font-weight: 800; line-height: 1.05;
+            letter-spacing: -2px; margin-bottom: 24px;
+            animation: slideInLeft 0.6s ease;
+        }
+        h1 em { 
+            background: linear-gradient(135deg, var(--accent), var(--gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-style: normal;
+        }
+        .hero-sub {
+            font-size: 18px; color: rgba(245,243,238,0.6);
+            line-height: 1.7; margin-bottom: 40px; font-weight: 300;
+            animation: slideInLeft 0.6s ease 0.1s both;
+        }
+        .hero-cta { display: flex; gap: 16px; flex-wrap: wrap; animation: slideInLeft 0.6s ease 0.2s both; }
+        .btn-primary {
+            padding: 16px 36px;
+            background: linear-gradient(135deg, var(--accent), #c1121f);
+            color: white;
+            border: none; border-radius: 12px;
+            font-family: 'Syne', sans-serif;
+            font-size: 16px; font-weight: 700;
+            cursor: pointer; text-decoration: none;
+            transition: all 0.3s ease; display: inline-block;
+            box-shadow: 0 4px 15px rgba(230,57,70,0.3);
+        }
+        .btn-primary:hover { transform: translateY(-3px); box-shadow: 0 12px 30px rgba(230,57,70,0.4); }
+        .btn-outline {
+            padding: 16px 36px;
+            background: transparent; color: var(--paper);
+            border: 1px solid rgba(245,243,238,0.25); border-radius: 12px;
+            font-family: 'Syne', sans-serif;
+            font-size: 16px; font-weight: 600;
+            cursor: pointer; text-decoration: none;
+            transition: all 0.3s ease; display: inline-block;
+        }
+        .btn-outline:hover { background: rgba(245,243,238,0.06); transform: translateY(-2px); border-color: rgba(245,243,238,0.4); }
+
+        /* Hero visual */
+        .hero-visual {
+            position: relative; display: flex; justify-content: center;
+            animation: slideInRight 0.6s ease;
+        }
+        .monitor-frame {
+            width: 100%; max-width: 440px;
+            background: var(--surface);
+            border-radius: 20px;
+            border: 1px solid rgba(245,243,238,0.1);
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.6);
+            animation: float 4s ease-in-out infinite;
+        }
+        .monitor-bar {
+            background: rgba(245,243,238,0.05);
+            padding: 14px 20px;
+            display: flex; gap: 10px; align-items: center;
+            border-bottom: 1px solid rgba(245,243,238,0.06);
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-r { background: #ff5f57; }
+        .dot-y { background: #febc2e; }
+        .dot-g { background: #28c840; }
+        .monitor-content { padding: 24px; }
+        .mc-title { font-family: 'Syne', sans-serif; font-size: 14px; font-weight: 700; margin-bottom: 16px; color: rgba(245,243,238,0.9); }
+        .mc-timer {
+            background: rgba(230,57,70,0.15); border: 1px solid rgba(230,57,70,0.3);
+            border-radius: 10px; padding: 12px 16px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 20px;
+        }
+        .mc-timer span { font-size: 11px; color: var(--accent); text-transform: uppercase; }
+        .mc-timer strong { font-family: 'Syne', sans-serif; font-size: 22px; color: var(--accent); }
+        .mc-q { font-size: 14px; color: rgba(245,243,238,0.8); margin-bottom: 16px; line-height: 1.5; }
+        .mc-option {
+            padding: 10px 14px; border-radius: 10px;
+            border: 1px solid rgba(245,243,238,0.1);
+            font-size: 13px; margin-bottom: 8px; cursor: pointer;
+            transition: all 0.2s; color: rgba(245,243,238,0.7);
+        }
+        .mc-option:hover { border-color: rgba(69,123,157,0.4); background: rgba(69,123,157,0.05); }
+        .mc-option.selected { border-color: var(--accent2); background: rgba(69,123,157,0.15); color: white; }
+        .lock-badge {
+            position: absolute; bottom: -16px; left: 50%; transform: translateX(-50%);
+            background: var(--gold);
+            color: var(--ink); padding: 6px 16px;
+            border-radius: 20px; font-size: 11px; font-weight: 700;
+            font-family: 'Syne', sans-serif;
+            white-space: nowrap;
+            box-shadow: 0 4px 15px rgba(244,162,97,0.3);
+        }
+
+        /* Stats Section - Fixed Equal Width Distribution */
+        .stats-section {
+            border-top: 1px solid rgba(245,243,238,0.08);
+            border-bottom: 1px solid rgba(245,243,238,0.08);
+            background: var(--ink);
+            width: 100%;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(245,243,238,0.08);
+        }
+
+        .stat-card {
+            background: var(--ink);
+            padding: 48px 20px;
+            text-align: center;
+            transition: all 0.3s ease;
+            border-right: 1px solid rgba(245,243,238,0.08);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-card:last-child {
+            border-right: none;
+        }
+
+        .stat-card:hover {
+            background: rgba(26,26,46,0.5);
+        }
+
+        .stat-number {
+            font-family: 'Syne', sans-serif;
+            font-size: 42px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--gold));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            line-height: 1.2;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: rgba(245,243,238,0.5);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        /* Features */
+        .features { padding: 100px 60px; max-width: 1200px; margin: 0 auto; }
+        .section-label {
+            font-size: 12px; letter-spacing: 4px; text-transform: uppercase;
+            color: var(--accent); font-weight: 600; margin-bottom: 16px;
+            text-align: center;
+        }
+        .section-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 42px; font-weight: 800;
+            letter-spacing: -1px; margin-bottom: 16px; text-align: center;
+        }
+        .section-desc {
+            text-align: center; color: rgba(245,243,238,0.5);
+            font-size: 16px; max-width: 600px; margin: 0 auto 60px;
+            line-height: 1.6;
+        }
+        .features-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 28px; }
+        .feat-card {
+            background: var(--surface);
+            border: 1px solid rgba(245,243,238,0.08);
+            border-radius: 20px;
+            padding: 36px 28px;
+            transition: all 0.4s ease;
+            text-align: center;
+        }
+        .feat-card:hover { 
+            border-color: rgba(230,57,70,0.3); 
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+        }
+        .feat-icon {
+            width: 64px; height: 64px;
+            background: linear-gradient(135deg, rgba(230,57,70,0.15), rgba(69,123,157,0.15));
+            border-radius: 20px; display: flex; align-items: center; justify-content: center;
+            font-size: 28px; margin: 0 auto 24px;
+            transition: all 0.3s ease;
+        }
+        .feat-card:hover .feat-icon {
+            transform: scale(1.05);
+            background: linear-gradient(135deg, rgba(230,57,70,0.25), rgba(69,123,157,0.25));
+        }
+        .feat-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 12px; }
+        .feat-desc { font-size: 14px; color: rgba(245,243,238,0.5); line-height: 1.7; }
+
+        /* CTA Section */
+        .cta-section {
+            text-align: center;
+            padding: 80px 60px;
+            background: linear-gradient(135deg, rgba(69,123,157,0.05), rgba(230,57,70,0.05));
+            border-top: 1px solid rgba(245,243,238,0.08);
+            border-bottom: 1px solid rgba(245,243,238,0.08);
+        }
+        .cta-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 36px; font-weight: 800;
+            margin-bottom: 16px;
+        }
+        .cta-sub {
+            color: rgba(245,243,238,0.5);
+            font-size: 16px;
+            margin-bottom: 32px;
+        }
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        /* Footer */
+        footer {
+            padding: 50px 60px 30px;
+            text-align: center;
+        }
+        .footer-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .footer-logo {
+            font-family: 'Syne', sans-serif;
+            font-size: 24px; font-weight: 800;
+            margin-bottom: 20px;
+        }
+        .footer-logo span { color: var(--accent); }
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 32px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+        .footer-links a {
+            color: rgba(245,243,238,0.5);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+        .footer-links a:hover { color: var(--paper); }
+        .footer-copyright {
+            color: rgba(245,243,238,0.3);
+            font-size: 13px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(245,243,238,0.08);
+        }
+        .developers {
+            margin-top: 16px;
+            font-size: 12px;
+            color: rgba(245,243,238,0.25);
+        }
+
+        @media(max-width: 900px) {
+            nav { padding: 16px 24px; }
+            .hero { padding: 100px 24px 60px; }
+            .hero-grid { grid-template-columns: 1fr; gap: 50px; }
+            .hero-visual { display: none; }
+            .stats-grid { grid-template-columns: repeat(2, 1fr); }
+            .stat-card:nth-child(2) { border-right: none; }
+            .features { padding: 60px 24px; }
+            .features-grid { grid-template-columns: 1fr; gap: 20px; }
+            .cta-section { padding: 60px 24px; }
+            footer { padding: 40px 24px 20px; }
+        }
+
+        @media(max-width: 480px) {
+            .stats-grid { grid-template-columns: 1fr; }
+            .stat-card { border-right: none; border-bottom: 1px solid rgba(245,243,238,0.08); }
+            .stat-card:last-child { border-bottom: none; }
+            .stat-number { font-size: 36px; }
+            .stat-label { font-size: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">Exam<span>Vision</span></div>
+        <div class="nav-links">
+            <a href="/login" class="btn-nav btn-ghost">Login</a>
+            <a href="/register" class="btn-nav btn-solid">Register Free</a>
+        </div>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-grid">
+            <div>
+                <div class="hero-badge">🔒 Fullscreen Proctoring</div>
+                <h1>Exams that <em>catch cheating</em> automatically</h1>
+                <p class="hero-sub">Secure, fullscreen-locked examinations with tab-switch monitoring, copy/paste detection, and automatic violation logging.</p>
+                <div class="hero-cta">
+                    <a href="/register" class="btn-primary">Start for Free →</a>
+                    <a href="/login" class="btn-outline">Login →</a>
+                </div>
+            </div>
+            <div class="hero-visual">
+                <div class="monitor-frame">
+                    <div class="monitor-bar">
+                        <div class="dot dot-r"></div>
+                        <div class="dot dot-y"></div>
+                        <div class="dot dot-g"></div>
+                    </div>
+                    <div class="monitor-content">
+                        <div class="mc-title">📝 Mathematics Exam</div>
+                        <div class="mc-timer">
+                            <span>⏱ Time Remaining</span>
+                            <strong>28:45</strong>
+                        </div>
+                        <div class="mc-q">Q1. What is the square root of 144?</div>
+                        <div class="mc-option">A. 11</div>
+                        <div class="mc-option selected">B. 12</div>
+                        <div class="mc-option">C. 13</div>
+                        <div class="mc-option">D. 14</div>
+                    </div>
+                </div>
+                <div class="lock-badge">🔒 Fullscreen Locked</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section - Equal Width Distribution -->
+    <div class="stats-section">
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-number">100%</div>
+                <div class="stat-label">Fullscreen Locked</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">Real-time</div>
+                <div class="stat-label">Violation Detection</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">3 Strikes</div>
+                <div class="stat-label">Auto-Termination</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">1 Mark</div>
+                <div class="stat-label">Per Question (MCQ)</div>
+            </div>
+        </div>
+    </div>
+
+    <section class="features">
+        <div class="section-label">Features</div>
+        <div class="section-title">Everything you need for secure exams</div>
+        <div class="section-desc">ExamVision provides a complete solution for conducting cheat-proof online examinations</div>
+        
+        <div class="features-grid">
+            <div class="feat-card">
+                <div class="feat-icon">🔒</div>
+                <div class="feat-title">Fullscreen Lock</div>
+                <div class="feat-desc">Exam auto-enters fullscreen on start. Exiting fullscreen is logged as a violation. 3 violations = exam auto-submits.</div>
+            </div>
+            <div class="feat-card">
+                <div class="feat-icon">🖥️</div>
+                <div class="feat-title">Tab Switch Detection</div>
+                <div class="feat-desc">Real-time monitoring detects when students switch tabs or minimize the browser window. Every attempt is logged with timestamp.</div>
+            </div>
+            <div class="feat-card">
+                <div class="feat-icon">📋</div>
+                <div class="feat-title">Copy/Paste Block</div>
+                <div class="feat-desc">Copy, cut, paste, and right-click are completely disabled during exam. Attempts are recorded as violations.</div>
+            </div>
+            <div class="feat-card">
+                <div class="feat-icon">⌨️</div>
+                <div class="feat-title">Keyboard Block</div>
+                <div class="feat-desc">All keyboard shortcuts (Ctrl, Alt, F-keys) are disabled. Only mouse/touchpad interaction is allowed for MCQ answers.</div>
+            </div>
+            <div class="feat-card">
+                <div class="feat-icon">📊</div>
+                <div class="feat-title">Detailed Analytics</div>
+                <div class="feat-desc">Teachers get complete reports: scores, pass rates, violation logs, and per-student cheating history with timestamps.</div>
+            </div>
+            <div class="feat-card">
+                <div class="feat-icon">🎯</div>
+                <div class="feat-title">Targeted Exams</div>
+                <div class="feat-desc">Create exams for specific departments and semesters. Students only see exams meant for their batch.</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="cta-section">
+        <div class="cta-title">Ready to get started?</div>
+        <div class="cta-sub">Join ExamVision today and conduct secure online exams with confidence</div>
+        <div class="cta-buttons">
+            <a href="/register" class="btn-primary">Register as Student →</a>
+            <a href="/login" class="btn-outline">Teacher Login →</a>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-logo">Exam<span>Vision</span></div>
+            <div class="footer-links">
+                <a href="/login">Login</a>
+                <a href="/register">Register</a>
+            </div>
+            <div class="footer-copyright">
+                <p><b>© 2026 ExamVision — Secure Online Examination System</b></p>
+                <div class="developers" style="font-size: 16px; color: #ffffff; font-weight: 500; letter-spacing: 0.5px;">
+                Developed by: Meenal Patro | Ashish Raunak | Nitin Kumar
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scroll animation observer -->
+    <script>
+        // Simple scroll reveal animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: "0px 0px -50px 0px"
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        // Apply to feature cards
+        document.querySelectorAll('.feat-card, .stat-card').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(30px)';
+            el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(el);
+        });
+
+        // Manual trigger for visible elements
+        setTimeout(() => {
+            document.querySelectorAll('.feat-card, .stat-card').forEach(el => {
+                const rect = el.getBoundingClientRect();
+                if (rect.top < window.innerHeight - 100) {
+                    el.style.opacity = '1';
+                    el.style.transform = 'translateY(0)';
+                }
+            });
+        }, 100);
+    </script>
+</body>
+</html>

@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ exam.title }} — ExamVision</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #0c0c14;
+            --paper: #f5f3ee;
+            --accent: #e63946;
+            --accent2: #457b9d;
+            --gold: #f4a261;
+            --surface: #141420;
+            --card: #1a1a2e;
+            --border: rgba(245,243,238,0.08);
+            --muted: rgba(245,243,238,0.45);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--ink);
+            color: var(--paper);
+            min-height: 100vh;
+            user-select: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+        }
+
+        /* ===== FULLSCREEN START OVERLAY ===== */
+        #fs-overlay {
+            position: fixed; inset: 0; z-index: 9999;
+            background: var(--ink);
+            display: flex; align-items: center; justify-content: center;
+            flex-direction: column; gap: 24px; text-align: center; padding: 40px;
+        }
+        #fs-overlay h2 { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; }
+        #fs-overlay p { color: var(--muted); font-size: 16px; max-width: 480px; line-height: 1.6; }
+        .rules-list {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 24px; max-width: 440px; width: 100%;
+            text-align: left;
+        }
+        .rule-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 10px 0; font-size: 14px; color: rgba(245,243,238,0.8);
+        }
+        .rule-item:not(:last-child) { border-bottom: 1px solid var(--border); }
+        .rule-icon { font-size: 20px; width: 28px; text-align: center; }
+        #start-exam-btn {
+            padding: 16px 48px;
+            background: var(--accent); color: white;
+            border: none; border-radius: 12px;
+            font-family: 'Syne', sans-serif;
+            font-size: 18px; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+        }
+        #start-exam-btn:hover { background: #c1121f; transform: translateY(-2px); }
+
+        /* ===== FULLSCREEN REQUIRED BLOCKER ===== */
+        #fs-required-blocker {
+            position: fixed; inset: 0; z-index: 99999;
+            background: #000;
+            display: none;
+            align-items: center; justify-content: center;
+            flex-direction: column; gap: 20px;
+            text-align: center; padding: 40px;
+        }
+        #fs-required-blocker.show { display: flex; }
+        #fs-required-blocker h2 {
+            font-family: 'Syne', sans-serif;
+            font-size: 30px; font-weight: 800; color: var(--accent);
+        }
+        #fs-required-blocker p { color: rgba(245,243,238,0.6); max-width: 400px; line-height: 1.6; }
+        #fs-reenter-btn {
+            padding: 14px 36px;
+            background: var(--accent); color: white;
+            border: none; border-radius: 10px;
+            font-family: 'Syne', sans-serif;
+            font-size: 16px; font-weight: 700;
+            cursor: pointer; transition: 0.2s;
+        }
+        #fs-reenter-btn:hover { background: #c1121f; }
+        .fs-violation-badge {
+            background: rgba(230,57,70,0.15);
+            border: 1px solid rgba(230,57,70,0.3);
+            padding: 10px 24px; border-radius: 8px;
+            font-family: 'Syne', sans-serif; font-size: 15px; color: var(--accent);
+        }
+
+        /* ===== WARNING OVERLAY (tab switch / copy) ===== */
+        #warning-overlay {
+            position: fixed; inset: 0; z-index: 9998;
+            background: rgba(0,0,0,0.92);
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column; gap: 20px; text-align: center; padding: 40px;
+        }
+        #warning-overlay.show { display: flex; }
+        .warning-icon { font-size: 64px; }
+        .warning-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; color: var(--accent); }
+        .warning-text { color: rgba(245,243,238,0.7); font-size: 16px; max-width: 400px; line-height: 1.6; }
+        .warning-count {
+            background: rgba(230,57,70,0.15); border: 1px solid rgba(230,57,70,0.3);
+            padding: 10px 24px; border-radius: 8px;
+            font-family: 'Syne', sans-serif; font-size: 15px; color: var(--accent);
+        }
+        #dismiss-warning {
+            padding: 12px 32px;
+            background: var(--accent); color: white; border: none; border-radius: 10px;
+            font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700;
+            cursor: pointer; transition: 0.2s;
+        }
+        #dismiss-warning:hover { background: #c1121f; }
+
+        /* ===== TOAST ===== */
+        #toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: rgba(230,57,70,0.95); color: white;
+            padding: 12px 24px; border-radius: 10px;
+            font-size: 14px; font-weight: 500; z-index: 99990;
+            display: none; backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(230,57,70,0.4);
+        }
+        #toast.show { display: block; animation: slideDown 0.3s ease; }
+        @keyframes slideDown { from{opacity:0;transform:translateX(-50%) translateY(-10px)} to{opacity:1;transform:translateX(-50%) translateY(0)} }
+
+        /* ===== EXAM HEADER ===== */
+        .exam-header {
+            position: fixed; top: 0; left: 0; right: 0;
+            height: 64px; z-index: 100;
+            background: rgba(12,12,20,0.95);
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(20px);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 40px;
+        }
+        .exam-title-nav { font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700; }
+        .timer-box {
+            display: flex; align-items: center; gap: 10px;
+            background: rgba(230,57,70,0.12); border: 1px solid rgba(230,57,70,0.3);
+            padding: 10px 20px; border-radius: 10px;
+        }
+        .timer-label { font-size: 12px; color: var(--accent); text-transform: uppercase; letter-spacing: 1px; }
+        #timer {
+            font-family: 'Syne', sans-serif;
+            font-size: 22px; font-weight: 800; color: var(--accent);
+            min-width: 70px; text-align: center;
+        }
+        .secure-status {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 13px; color: var(--muted);
+        }
+        .secure-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: #4ade80; animation: pulse 2s infinite;
+        }
+        .secure-dot.warn { background: var(--accent); }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+        /* ===== MAIN CONTENT ===== */
+        .exam-main {
+            max-width: 800px; margin: 0 auto;
+            padding: 84px 40px 100px;
+        }
+        .exam-info-bar { display: flex; gap: 16px; margin-bottom: 32px; flex-wrap: wrap; }
+        .info-chip {
+            background: var(--card); border: 1px solid var(--border);
+            padding: 8px 16px; border-radius: 100px;
+            font-size: 13px; color: var(--muted);
+        }
+        .info-chip span { color: rgba(245,243,238,0.85); font-weight: 500; }
+
+        .progress-bar-wrap {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 16px 20px; margin-bottom: 32px;
+            display: flex; align-items: center; gap: 16px;
+        }
+        .progress-bar-bg {
+            flex: 1; height: 6px; background: rgba(245,243,238,0.06);
+            border-radius: 100px; overflow: hidden;
+        }
+        .progress-bar-fill {
+            height: 100%; background: var(--accent2);
+            border-radius: 100px; transition: width 0.3s; width: 0%;
+        }
+        .progress-text { font-size: 13px; color: var(--muted); white-space: nowrap; }
+
+        .question-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 16px; padding: 28px; margin-bottom: 20px;
+            transition: border-color 0.2s;
+        }
+        .question-card.answered { border-color: rgba(69,123,157,0.4); }
+        .q-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+        .q-num {
+            background: var(--accent); color: white;
+            width: 28px; height: 28px; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700; flex-shrink: 0;
+        }
+        .q-marks {
+            font-size: 12px; color: var(--muted);
+            background: rgba(245,243,238,0.05); border: 1px solid var(--border);
+            padding: 4px 12px; border-radius: 100px;
+        }
+        .q-text { font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: rgba(245,243,238,0.9); }
+        .options-grid { display: flex; flex-direction: column; gap: 10px; }
+        .option-btn {
+            padding: 14px 18px;
+            background: rgba(245,243,238,0.03); border: 1px solid var(--border);
+            border-radius: 10px; color: rgba(245,243,238,0.75);
+            font-family: 'DM Sans', sans-serif; font-size: 15px;
+            cursor: pointer; text-align: left; transition: all 0.2s;
+            display: flex; align-items: center; gap: 12px;
+        }
+        .option-btn:hover { border-color: rgba(69,123,157,0.5); background: rgba(69,123,157,0.08); color: white; }
+        .option-btn.selected { border-color: var(--accent2); background: rgba(69,123,157,0.15); color: white; font-weight: 500; }
+        .option-letter {
+            width: 24px; height: 24px; border-radius: 50%;
+            background: rgba(245,243,238,0.08); border: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 700; flex-shrink: 0; transition: all 0.2s;
+        }
+        .option-btn.selected .option-letter { background: var(--accent2); border-color: var(--accent2); color: white; }
+
+        .desc-area {
+            width: 100%; min-height: 120px; padding: 14px 16px;
+            background: rgba(245,243,238,0.03); border: 1px solid var(--border);
+            border-radius: 10px; color: var(--paper);
+            font-family: 'DM Sans', sans-serif; font-size: 15px;
+            resize: vertical; outline: none; transition: border-color 0.2s;
+            user-select: text; -webkit-user-select: text;
+        }
+        .desc-area:focus { border-color: var(--accent2); }
+
+        .submit-bar {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: rgba(12,12,20,0.95); border-top: 1px solid var(--border);
+            backdrop-filter: blur(20px); padding: 16px 40px;
+            display: flex; justify-content: space-between; align-items: center;
+            z-index: 100;
+        }
+        .answered-count { font-size: 14px; color: var(--muted); }
+        .answered-count span { color: var(--accent2); font-weight: 600; }
+        .btn-submit {
+            padding: 14px 40px;
+            background: var(--accent); color: white; border: none; border-radius: 10px;
+            font-family: 'Syne', sans-serif; font-size: 16px; font-weight: 700;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .btn-submit:hover { background: #c1121f; transform: translateY(-1px); }
+
+        /* ===== SUBMIT CONFIRM MODAL ===== */
+        #submit-modal {
+            position: fixed; inset: 0; z-index: 100001;
+            background: rgba(0,0,0,0.85);
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column; text-align: center; padding: 40px;
+        }
+        #submit-modal.show { display: flex; }
+        .submit-modal-box {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 20px; padding: 40px 48px; max-width: 460px; width: 100%;
+        }
+        .submit-modal-icon { font-size: 56px; margin-bottom: 16px; }
+        .submit-modal-title { font-family: 'Syne', sans-serif; font-size: 24px; font-weight: 800; margin-bottom: 10px; }
+        .submit-modal-sub { color: var(--muted); font-size: 15px; line-height: 1.6; margin-bottom: 28px; }
+        .submit-modal-count { background: rgba(69,123,157,0.12); border: 1px solid rgba(69,123,157,0.25); padding: 10px 20px; border-radius: 10px; font-size: 14px; color: var(--accent2); margin-bottom: 28px; }
+        .submit-modal-actions { display: flex; gap: 14px; justify-content: center; }
+        .btn-modal-cancel { padding: 12px 32px; border-radius: 10px; background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+        .btn-modal-cancel:hover { color: var(--paper); border-color: rgba(245,243,238,0.2); }
+        .btn-modal-submit { padding: 12px 36px; border-radius: 10px; background: var(--accent); border: none; color: white; font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; cursor: pointer; transition: 0.2s; }
+        .btn-modal-submit:hover { background: #c1121f; }
+
+        /* ===== TIME OVER OVERLAY ===== */
+        #timeover-overlay {
+            position: fixed; inset: 0; z-index: 100002;
+            background: rgba(0,0,0,0.97);
+            display: none; align-items: center; justify-content: center;
+            flex-direction: column; gap: 18px; text-align: center; padding: 40px;
+        }
+        #timeover-overlay.show { display: flex; }
+        
+        @media(max-width: 768px) {
+            .exam-header { padding: 0 20px; }
+            .exam-main { padding: 84px 20px 100px; }
+            .submit-bar { padding: 12px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- Fullscreen Start Overlay -->
+<div id="fs-overlay">
+    <div style="font-family:'Syne',sans-serif;font-size:28px;font-weight:800;">⚠️ Before You Begin</div>
+    <p>This exam will run in <strong>fullscreen mode</strong>. Please read the rules carefully before starting.</p>
+    <div class="rules-list">
+        <div class="rule-item"><div class="rule-icon">🔒</div> Fullscreen is mandatory — exam PAUSES if you exit fullscreen</div>
+        <div class="rule-item"><div class="rule-icon">🖥️</div> Tab switching will trigger violations</div>
+        <div class="rule-item"><div class="rule-icon">📋</div> Copy & paste are disabled and will be recorded as violations</div>
+        <div class="rule-item"><div class="rule-icon">🚨</div> 3 violations = Exam auto-terminates and submits</div>
+        <div class="rule-item"><div class="rule-icon">⏱️</div> Exam auto-submits when time runs out</div>
+    </div>
+    <button id="start-exam-btn" onclick="startExam()">I Understand — Start Exam →</button>
+</div>
+
+<!-- Fullscreen Required Blocker -->
+<div id="fs-required-blocker">
+    <div style="font-size:64px">🔒</div>
+    <h2>Fullscreen Required!</h2>
+    <p>You exited fullscreen mode. This violation has been recorded. Click below to re-enter fullscreen and continue your exam.</p>
+    <div class="fs-violation-badge" id="fs-violation-count">Violation recorded</div>
+    <button id="fs-reenter-btn" onclick="reenterFullscreen()">🔒 Click to Re-enter Fullscreen</button>
+    <p style="font-size:12px;color:rgba(245,243,238,0.3);margin-top:8px;">
+        You cannot continue until you re-enter fullscreen.
+    </p>
+</div>
+
+<!-- Warning Overlay -->
+<div id="warning-overlay">
+    <div class="warning-icon">🚨</div>
+    <div class="warning-title" id="warning-title">Violation Detected!</div>
+    <div class="warning-text" id="warning-text">This action has been recorded.</div>
+    <div class="warning-count" id="warning-count">Violation 1 of 3</div>
+    <button id="dismiss-warning" onclick="dismissWarning()">I Understand, Return to Exam</button>
+</div>
+
+<!-- Toast -->
+<div id="toast"></div>
+
+<!-- Exam Header -->
+<div class="exam-header">
+    <div class="exam-title-nav">📝 {{ exam.title }}</div>
+    <div class="timer-box">
+        <div>
+            <div class="timer-label">Time Left</div>
+            <div id="timer">--:--</div>
+        </div>
+    </div>
+    <div class="secure-status">
+        <div class="secure-dot" id="secure-dot"></div>
+        <span id="secure-label">Secure Mode</span>
+    </div>
+</div>
+
+<!-- Main Exam Content -->
+<div class="exam-main">
+    <div class="exam-info-bar">
+        <div class="info-chip">⏱ <span>{{ exam.duration }} minutes</span></div>
+        <div class="info-chip">📝 <span>{{ questions|length }} questions</span></div>
+        <div class="info-chip">⭐ <span>{{ exam.total_marks }} marks</span></div>
+        <div class="info-chip">🔒 <span>Fullscreen Locked</span></div>
+    </div>
+
+    <div class="progress-bar-wrap">
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="progress-fill"></div>
+        </div>
+        <div class="progress-text"><span id="answered-prog">0</span>/{{ questions|length }} answered</div>
+    </div>
+
+    <input type="hidden" id="exam_id" value="{{ exam.id }}">
+    <input type="hidden" id="set_id" value="{{ assigned_set.id if assigned_set else '' }}">
+
+    {% for question in questions %}
+    <div class="question-card" id="qcard-{{ question.id }}" data-qid="{{ question.id }}">
+        <div class="q-header">
+            <div class="q-num">{{ loop.index }}</div>
+            <div class="q-marks">{{ question.marks }} mark{{ 's' if question.marks > 1 }}</div>
+        </div>
+        <div class="q-text">{{ question.question_text }}</div>
+
+        {% if question.question_type == 'mcq' %}
+        <div class="options-grid" data-qid="{{ question.id }}">
+            {% set opt_dict = question.options | from_json %}
+            {% for letter in ['A','B','C','D'] %}
+            {% if opt_dict.get(letter) %}
+            <button class="option-btn"
+                    onclick="selectOption(this, '{{ question.id }}', '{{ letter }}')"
+                    data-value="{{ letter }}">
+                <span class="option-letter">{{ letter }}</span>
+                {{ opt_dict[letter] }}
+            </button>
+            {% endif %}
+            {% endfor %}
+        </div>
+        {% else %}
+        <textarea class="desc-area" id="desc-{{ question.id }}"
+                  placeholder="Type your answer here..."
+                  oninput="markAnswered('{{ question.id }}')"></textarea>
+        {% endif %}
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Submit Bar -->
+<div class="submit-bar">
+    <div class="answered-count">Answered: <span id="ans-count">0</span> / {{ questions|length }}</div>
+    <button class="btn-submit" onclick="confirmSubmit()">Submit Exam ✓</button>
+</div>
+
+<!-- Submit Confirmation Modal -->
+<div id="submit-modal">
+    <div class="submit-modal-box">
+        <div class="submit-modal-icon">📋</div>
+        <div class="submit-modal-title">Submit Exam?</div>
+        <div class="submit-modal-sub">Are you sure you want to submit? You cannot change your answers after submission.</div>
+        <div class="submit-modal-count" id="submit-modal-count">Answered: 0 / 0</div>
+        <div class="submit-modal-actions">
+            <button class="btn-modal-cancel" onclick="closeSubmitModal()">← Keep Attempting</button>
+            <button class="btn-modal-submit" onclick="doSubmit()">Submit Exam ✓</button>
+        </div>
+    </div>
+</div>
+
+<!-- Time Over Overlay -->
+<div id="timeover-overlay">
+    <div style="font-size:72px;">⏱️</div>
+    <div style="font-family:'Syne',sans-serif;font-size:32px;font-weight:800;color:var(--accent);">Time Over!</div>
+    <div style="color:rgba(245,243,238,0.6);font-size:16px;max-width:400px;line-height:1.6;">Your exam time has expired. Your answers are being submitted automatically.</div>
+    <div style="font-size:14px;color:rgba(245,243,238,0.4);margin-top:4px;">Redirecting to dashboard...</div>
+</div>
+
+<script>
+    // ===== STATE =====
+    let examStarted = false;
+    let examTerminated = false;
+    let warningShown = false;
+    let violationCount = 0;
+    const MAX_VIOLATIONS = 3;
+    let answers = {};
+    let totalQuestions = {{ questions|length }};
+    let examId = document.getElementById('exam_id').value;
+    let timerInterval = null;
+    let fsLost = false;
+
+    // Time left calculation
+    {% if exam.scheduled_date and exam.end_time %}
+    const examEndTime = new Date("{{ exam.scheduled_date.strftime('%Y-%m-%d') }}T{{ exam.end_time.strftime('%H:%M') }}:00");
+    const msToEnd = examEndTime - new Date();
+    let timeLeft = Math.min({{ exam.duration }} * 60, Math.max(0, Math.floor(msToEnd / 1000)));
+    {% else %}
+    let timeLeft = {{ exam.duration }} * 60;
+    {% endif %}
+
+    // Hard deadline check
+    {% if exam.scheduled_date and exam.end_time %}
+    (function checkDeadline() {
+        const chk = setInterval(function() {
+            if (examTerminated) { clearInterval(chk); return; }
+            if (new Date() >= examEndTime) {
+                clearInterval(chk);
+                autoSubmit('Exam scheduled end time reached');
+            }
+        }, 5000);
+    })();
+    {% endif %}
+
+    // ===== KEYBOARD DISABLE =====
+    document.addEventListener('keydown', function(e) {
+        const inTextarea = document.activeElement && document.activeElement.classList.contains('desc-area');
+        
+        if (e.key === 'Tab' || e.key === 'Escape' || e.key === 'F5' ||
+            e.key === 'F11' || e.key === 'F12' || e.key === 'F1' ||
+            e.key === 'PrintScreen') {
+            e.preventDefault(); e.stopPropagation();
+            showToast('⌨️ This key is disabled during exam');
+            return false;
+        }
+        if (e.ctrlKey || e.altKey || e.metaKey) {
+            e.preventDefault(); e.stopPropagation();
+            if (e.ctrlKey && e.key === 'c') {
+                logViolation('copy_attempt', 'Student attempted to copy (Ctrl+C)');
+                showViolationWarning('📋 Copy Attempt Detected!', 'Copying is not allowed.');
+            } else if (e.ctrlKey && e.key === 'v') {
+                logViolation('paste_attempt', 'Student attempted to paste (Ctrl+V)');
+                showViolationWarning('📋 Paste Attempt Detected!', 'Pasting is not allowed.');
+            } else {
+                showToast('⌨️ Keyboard shortcuts are disabled!');
+            }
+            return false;
+        }
+        if (!inTextarea) {
+            e.preventDefault(); e.stopPropagation();
+            return false;
+        }
+    }, true);
+
+    document.addEventListener('copy', function(e) { 
+        e.preventDefault(); 
+        logViolation('copy_attempt', 'Copy attempted');
+        showViolationWarning('📋 Copy Attempt Detected!', 'Copying is not allowed.');
+    });
+    document.addEventListener('paste', function(e) { 
+        e.preventDefault(); 
+        logViolation('paste_attempt', 'Paste attempted');
+        showViolationWarning('📋 Paste Attempt Detected!', 'Pasting is not allowed.');
+    });
+    document.addEventListener('contextmenu', function(e) { 
+        e.preventDefault(); 
+        logViolation('right_click', 'Right-click attempted');
+        showViolationWarning('🖱️ Right-click Disabled!', 'Right-click is not allowed.');
+    });
+
+    // ===== TAB SWITCH DETECTION =====
+    document.addEventListener('visibilitychange', function() {
+        if (!examStarted || examTerminated) return;
+        if (document.hidden) {
+            logViolation('tab_switch', 'Student switched tab or minimized window');
+            showViolationWarning('🚨 Tab Switch Detected!', 'You switched to another tab or minimized the browser.');
+        }
+    });
+
+    // ===== FULLSCREEN MANAGEMENT =====
+    function enterFullscreen() {
+        const el = document.documentElement;
+        const p = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen || el.msRequestFullscreen;
+        if (p) p.call(el).catch(() => {});
+    }
+
+    function reenterFullscreen() {
+        enterFullscreen();
+    }
+
+    document.addEventListener('fullscreenchange', handleFSChange);
+    document.addEventListener('webkitfullscreenchange', handleFSChange);
+
+    function isInFullscreen() {
+        return !!(document.fullscreenElement || document.webkitFullscreenElement ||
+                  document.mozFullScreenElement || document.msFullscreenElement);
+    }
+
+    function handleFSChange() {
+        if (!examStarted || examTerminated) return;
+        if (!isInFullscreen()) {
+            fsLost = true;
+            violationCount++;
+            logViolation('fullscreen_exit', 'Student exited fullscreen mode');
+            const blocker = document.getElementById('fs-required-blocker');
+            if (blocker) blocker.classList.add('show');
+            if (violationCount >= MAX_VIOLATIONS) {
+                setTimeout(() => {
+                    terminateExam('Too many violations. Exam auto-submitted.');
+                }, 1500);
+            }
+        } else {
+            fsLost = false;
+            const blocker = document.getElementById('fs-required-blocker');
+            if (blocker) blocker.classList.remove('show');
+            showToast('✅ Fullscreen restored.');
+        }
+    }
+
+    setInterval(function() {
+        if (!examStarted || examTerminated) return;
+        if (!isInFullscreen() && !fsLost) {
+            handleFSChange();
+        }
+    }, 1000);
+
+    // ===== VIOLATIONS =====
+    function showViolationWarning(title, text) {
+        if (examTerminated) return;
+        if (!fsLost) violationCount++;
+        if (violationCount >= MAX_VIOLATIONS) {
+            terminateExam('Too many violations. Exam auto-submitted.');
+            return;
+        }
+        document.getElementById('warning-title').textContent = title;
+        document.getElementById('warning-text').textContent = text;
+        document.getElementById('warning-count').textContent = 'Violation ' + violationCount + ' of ' + MAX_VIOLATIONS;
+        document.getElementById('warning-overlay').classList.add('show');
+    }
+
+    function dismissWarning() {
+        document.getElementById('warning-overlay').classList.remove('show');
+        if (!isInFullscreen()) enterFullscreen();
+    }
+
+    function terminateExam(reason) {
+        if (examTerminated) return;
+        examTerminated = true;
+        clearInterval(timerInterval);
+        document.getElementById('fs-required-blocker')?.classList.remove('show');
+        document.getElementById('warning-overlay')?.classList.remove('show');
+        document.getElementById('submit-modal')?.classList.remove('show');
+        logViolation('exam_terminated', reason);
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        setTimeout(() => submitExam(true), 2000);
+        setTimeout(() => { window.location.href = '/student/dashboard'; }, 5000);
+    }
+
+    async function logViolation(type, details) {
+        if (examTerminated) return;
+        try {
+            await fetch('/api/cheating-log', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({type, details, exam_id: examId})
+            });
+        } catch(e) {}
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('toast');
+        t.textContent = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 3000);
+    }
+
+    // ===== START EXAM =====
+    function startExam() {
+        enterFullscreen();
+        document.getElementById('fs-overlay').style.display = 'none';
+        examStarted = true;
+        startTimer();
+    }
+
+    // ===== TIMER =====
+    function startTimer() {
+        updateTimer();
+        timerInterval = setInterval(() => {
+            if (examTerminated) return;
+            timeLeft--;
+            updateTimer();
+            if (timeLeft <= 0) {
+                clearInterval(timerInterval);
+                autoSubmit('Time expired');
+            }
+        }, 1000);
+    }
+
+    function updateTimer() {
+        const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+        const s = (timeLeft % 60).toString().padStart(2, '0');
+        document.getElementById('timer').textContent = m + ':' + s;
+    }
+
+    // ===== ANSWER HANDLING =====
+    function selectOption(btn, qid, val) {
+        btn.closest('.options-grid').querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+        btn.classList.add('selected');
+        answers[qid] = val;
+        markAnswered(qid);
+    }
+
+    function markAnswered(qid) {
+        const card = document.getElementById('qcard-' + qid);
+        if (card) {
+            const ta = document.getElementById('desc-' + qid);
+            if (ta) {
+                answers[qid] = ta.value;
+            }
+            if (answers[qid] && answers[qid].toString().trim() !== '') {
+                card.classList.add('answered');
+            } else {
+                card.classList.remove('answered');
+                if (!ta) {
+                    // Keep MCQ answer
+                } else {
+                    delete answers[qid];
+                }
+            }
+        }
+        updateProgress();
+    }
+
+    function updateProgress() {
+        let count = 0;
+        for (const key in answers) {
+            if (answers[key] && answers[key].toString().trim() !== '') {
+                count++;
+            }
+        }
+        document.getElementById('ans-count').textContent = count;
+        document.getElementById('answered-prog').textContent = count;
+        document.getElementById('progress-fill').style.width = (count / totalQuestions * 100) + '%';
+    }
+
+    // ===== SUBMIT (FIXED WITH SET_ID) =====
+    function confirmSubmit() {
+        if (!examStarted || examTerminated) return;
+        let count = 0;
+        for (const key in answers) {
+            if (answers[key] && answers[key].toString().trim() !== '') count++;
+        }
+        document.getElementById('submit-modal-count').textContent = 'You have answered ' + count + ' out of ' + totalQuestions + ' questions.';
+        document.getElementById('submit-modal').classList.add('show');
+    }
+
+    function closeSubmitModal() {
+        document.getElementById('submit-modal').classList.remove('show');
+    }
+
+    function doSubmit() {
+        closeSubmitModal();
+        submitExam(false);
+    }
+
+    async function submitExam(autoSub) {
+        if (examTerminated && !autoSub) return;
+        clearInterval(timerInterval);
+        examTerminated = true;
+        
+        // Clean up answers - remove empty ones
+        const cleanAnswers = {};
+        for (const key in answers) {
+            if (answers[key] && answers[key].toString().trim() !== '') {
+                cleanAnswers[key] = answers[key];
+            }
+        }
+        
+        // Get set_id from hidden input (FIX: This was missing)
+        const set_id = document.getElementById('set_id')?.value || null;
+        
+        try {
+            const res = await fetch('/api/submit-exam', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    exam_id: examId, 
+                    answers: cleanAnswers,
+                    set_id: set_id  // FIX: Include set_id in submission
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+                setTimeout(() => { window.location.href = '/student/dashboard'; }, autoSub ? 3000 : 1500);
+            }
+        } catch(e) {
+            setTimeout(() => { window.location.href = '/student/dashboard'; }, 2000);
+        }
+    }
+
+    function autoSubmit(reason) {
+        if (examTerminated) return;
+        clearInterval(timerInterval);
+        examTerminated = true;
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
+        document.getElementById('submit-modal')?.classList.remove('show');
+        document.getElementById('timeover-overlay')?.classList.add('show');
+        submitExam(true);
+    }
+
+    // ===== PREVENT PAGE LEAVE =====
+    window.addEventListener('beforeunload', function(e) {
+        if (examStarted && !examTerminated) {
+            logViolation('page_leave_attempt', 'Student attempted to leave exam page');
+            e.preventDefault();
+            e.returnValue = 'Leaving will terminate your exam!';
+        }
+    });
+
+    history.pushState(null, null, location.href);
+    window.addEventListener('popstate', function() {
+        if (examStarted && !examTerminated) {
+            history.pushState(null, null, location.href);
+            showViolationWarning('⬅️ Back Navigation Blocked!', 'You cannot navigate away during the exam.');
+        }
+    });
+</script>
+</body>
+</html>

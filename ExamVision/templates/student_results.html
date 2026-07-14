@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Results — ExamVision</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #0a0a0f;
+            --paper: #f5f3ee;
+            --accent: #e63946;
+            --accent2: #457b9d;
+            --gold: #f4a261;
+            --green: #4ade80;
+            --surface: #141420;
+            --card: #1a1a2e;
+            --border: rgba(245,243,238,0.08);
+            --muted: rgba(245,243,238,0.45);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--ink);
+            color: var(--paper);
+            min-height: 100vh;
+        }
+        nav {
+            padding: 0 40px; height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10,10,15,0.98);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+        .logo span { color: var(--accent); }
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .user-chip {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--card); border: 1px solid var(--border);
+            padding: 8px 16px; border-radius: 100px;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .user-chip:hover { border-color: rgba(69,123,157,0.4); }
+        .user-av {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--accent2); display: flex;
+            align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700; color: white;
+        }
+        .user-name { font-size: 14px; color: var(--paper); }
+        .btn-link {
+            padding: 8px 18px; border-radius: 8px;
+            background: transparent; color: var(--muted);
+            border: 1px solid var(--border);
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .btn-link:hover { color: var(--accent); border-color: rgba(230,57,70,0.3); }
+        .main { max-width: 1000px; margin: 0 auto; padding: 40px; }
+        .page-title { font-family: 'Syne', sans-serif; font-size: 32px; font-weight: 800; margin-bottom: 8px; }
+        .page-sub { color: var(--muted); margin-bottom: 32px; }
+        .results-grid { display: grid; gap: 20px; }
+        .result-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            transition: all 0.3s;
+        }
+        .result-card:hover { transform: translateY(-2px); border-color: rgba(69,123,157,0.3); }
+        .result-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .exam-title {
+            font-family: 'Syne', sans-serif;
+            font-size: 18px;
+            font-weight: 700;
+        }
+        .score-badge {
+            background: linear-gradient(135deg, var(--accent2), #1d3557);
+            padding: 6px 16px;
+            border-radius: 100px;
+            font-size: 14px;
+            font-weight: 600;
+        }
+        .result-details {
+            display: flex;
+            gap: 24px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+        .detail-item span { color: var(--paper); font-weight: 500; }
+        .percentage {
+            font-size: 24px;
+            font-weight: 800;
+            font-family: 'Syne', sans-serif;
+        }
+        .percentage.pass { color: var(--green); }
+        .percentage.fail { color: var(--accent); }
+        .btn-view {
+            display: inline-block;
+            padding: 10px 24px;
+            background: linear-gradient(135deg, var(--accent2), #1d3557);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Syne', sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        .btn-view:hover { transform: translateY(-1px); opacity: 0.9; }
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+        }
+        .empty-icon { font-size: 64px; margin-bottom: 16px; }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-declared {
+            background: rgba(74,222,128,0.12);
+            color: var(--green);
+        }
+        .status-pending {
+            background: rgba(244,162,97,0.12);
+            color: var(--gold);
+        }
+        @media(max-width: 768px) {
+            nav { padding: 0 20px; }
+            .main { padding: 20px; }
+            .result-header { flex-direction: column; gap: 12px; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">Exam<span>Vision</span></div>
+        <div class="nav-right">
+            <a href="/student/dashboard" class="user-chip">
+                <div class="user-av">{{ (current_user.full_name or current_user.username)[0].upper() }}</div>
+                <div class="user-name">{{ current_user.full_name or current_user.username }}</div>
+            </a>
+            <a href="/logout" class="btn-link">Logout</a>
+        </div>
+    </nav>
+
+    <div class="main">
+        <div class="page-title">📊 My Results</div>
+        <div class="page-sub">View all your exam attempts - Results appear only when declared by teacher</div>
+
+        {% if results %}
+        <div class="results-grid">
+            {% for result in results %}
+            {% set percentage = (result.score / result.total_marks * 100) if result.total_marks > 0 else 0 %}
+            <div class="result-card">
+                <div class="result-header">
+                    <div class="exam-title">{{ result.exam.title }}</div>
+                    <div class="score-badge">{{ result.score }} / {{ result.total_marks }} marks</div>
+                </div>
+                <div class="result-details">
+                    <div class="detail-item">📅 <span>{{ result.submitted_at.strftime('%d %b %Y, %H:%M') }}</span></div>
+                    <div class="detail-item">⏱ <span>{{ result.exam.duration }} minutes</span></div>
+                    <div class="detail-item">
+                        {% if result.exam.exam_type == 'random_set' %}
+                            <span style="color: var(--gold);">🎲 Random Sets Exam</span>
+                        {% else %}
+                            <span>📝 Normal Exam</span>
+                        {% endif %}
+                    </div>
+                    <div class="detail-item">
+                        {% if result.exam.result_declared %}
+                            <span class="status-badge status-declared">✅ Result Declared</span>
+                        {% else %}
+                            <span class="status-badge status-pending">⏳ Result Not Declared Yet</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                    <div>
+                        <div class="percentage {% if percentage >= 40 %}pass{% else %}fail{% endif %}">
+                            {{ "%.1f"|format(percentage) }}%
+                        </div>
+                        <div style="font-size: 12px; color: var(--muted); margin-top: 4px;">
+                            {% if percentage >= 40 %}✓ Passed{% else %}✗ Failed{% endif %}
+                        </div>
+                    </div>
+                    {% if result.exam.result_declared %}
+                        <a href="/student/view-result/{{ result.id }}" class="btn-view">📝 View Detailed Result →</a>
+                    {% else %}
+                        <button class="btn-view" style="background: var(--muted); cursor: not-allowed;" disabled>🔒 Result Not Declared</button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <div style="font-size: 18px; margin-bottom: 8px;">No results yet</div>
+            <div style="color: var(--muted);">You haven't attempted any exams, or results are not declared yet.</div>
+            <a href="/student/dashboard" style="display: inline-block; margin-top: 20px; color: var(--accent2);">← Go to Dashboard</a>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

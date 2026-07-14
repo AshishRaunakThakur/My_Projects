@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Answers — {{ exam.title }}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #0a0a0f;
+            --paper: #f5f3ee;
+            --accent: #e63946;
+            --accent2: #457b9d;
+            --gold: #f4a261;
+            --green: #4ade80;
+            --surface: #141420;
+            --card: #1a1a2e;
+            --border: rgba(245,243,238,0.08);
+            --muted: rgba(245,243,238,0.45);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--ink);
+            color: var(--paper);
+            min-height: 100vh;
+        }
+        nav {
+            padding: 0 40px; height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10,10,15,0.98);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+        .logo span { color: var(--accent); }
+        .btn-back {
+            padding: 8px 20px; border-radius: 8px;
+            background: transparent; color: var(--muted);
+            border: 1px solid var(--border);
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .btn-back:hover { color: var(--paper); }
+        .main { max-width: 900px; margin: 0 auto; padding: 40px; }
+        .page-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+        .student-info {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        .info-row:last-child { border-bottom: none; }
+        .info-label { color: var(--muted); font-size: 13px; }
+        .info-value { font-weight: 600; color: var(--paper); }
+        .score-badge {
+            background: linear-gradient(135deg, var(--accent2), #1d3557);
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 14px;
+        }
+        .question-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 20px;
+        }
+        .question-card.correct { border-left: 4px solid var(--green); }
+        .question-card.incorrect { border-left: 4px solid var(--accent); }
+        .q-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .q-num {
+            background: var(--accent2);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Syne', sans-serif;
+            font-size: 14px;
+            font-weight: 700;
+        }
+        .q-marks { font-size: 12px; color: var(--muted); }
+        .q-text { font-size: 16px; line-height: 1.6; margin-bottom: 20px; color: rgba(245,243,238,0.9); }
+        .answer-box {
+            background: rgba(245,243,238,0.03);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 14px 18px;
+            margin-top: 12px;
+        }
+        .answer-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; }
+        .answer-value { font-size: 15px; color: var(--paper); }
+        .correct-answer { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+        .status-icon { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; margin-top: 12px; }
+        .status-correct { color: var(--green); }
+        .status-incorrect { color: var(--accent); }
+        .options-list { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+        .option-item { padding: 10px 14px; border-radius: 10px; font-size: 14px; transition: all 0.2s; }
+        .option-selected { background: rgba(69,123,157,0.2); border-left: 3px solid var(--accent2); }
+        .option-correct { background: rgba(74,222,128,0.1); border-left: 3px solid var(--green); }
+        .option-letter { display: inline-block; width: 28px; font-weight: 700; color: var(--accent2); }
+        .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 600; margin-left: 8px; }
+        .badge-selected { background: rgba(69,123,157,0.3); color: var(--accent2); }
+        .badge-correct { background: rgba(74,222,128,0.2); color: var(--green); }
+        @media(max-width: 768px) {
+            nav { padding: 0 20px; }
+            .main { padding: 20px; }
+            .info-row { flex-direction: column; gap: 5px; }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div class="logo">Exam<span>Vision</span></div>
+        <a href="/teacher/exam-analysis/{{ exam.id }}" class="btn-back">← Back to Analysis</a>
+    </nav>
+
+    <div class="main">
+        <div class="page-title">📝 Student Answer Sheet</div>
+        <div style="color: var(--muted); margin-bottom: 24px;">{{ exam.title }}</div>
+
+        <div class="student-info">
+            <div class="info-row">
+                <span class="info-label">Student Name</span>
+                <span class="info-value">{{ result.student.full_name or result.student.username }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Student Email</span>
+                <span class="info-value">{{ result.student.email }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Department & Semester</span>
+                <span class="info-value">{{ result.student.department or 'Not set' }} • Sem {{ result.student.semester or 'Not set' }}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Score</span>
+                <span class="info-value"><span class="score-badge">{{ result.score }} / {{ result.total_marks }} marks</span></span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Percentage</span>
+                <span class="info-value">{{ "%.1f"|format(result.score/result.total_marks*100 if result.total_marks > 0 else 0) }}%</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Submitted At</span>
+                <span class="info-value">{{ result.submitted_at.strftime('%d %b %Y, %H:%M:%S') }}</span>
+            </div>
+        </div>
+
+        <div style="margin-bottom: 20px;">
+            <h3 style="font-family: 'Syne', sans-serif; font-size: 18px;">📋 Answered Questions</h3>
+        </div>
+
+        {% for question in questions %}
+        {% set qid = question.id|string %}
+        {% set student_answer = student_answers.get(qid) %}
+        {% set is_correct = (student_answer|string == question.correct_answer|string) if student_answer else False %}
+        {% set options = question.options | from_json %}
+        {% set has_answer = student_answer is not none and student_answer != '' and student_answer != 'null' %}
+        
+        <div class="question-card {% if has_answer and is_correct %}correct{% elif has_answer %}incorrect{% endif %}">
+            <div class="q-header">
+                <div class="q-num">{{ loop.index }}</div>
+                <div class="q-marks">{{ question.marks }} mark{{ 's' if question.marks > 1 }}</div>
+            </div>
+            <div class="q-text">{{ question.question_text }}</div>
+            
+            {% if options %}
+            <div class="options-list">
+                {% for letter, text in options.items() %}
+                    {% set is_selected = (student_answer|string == letter|string) if student_answer else False %}
+                    {% set is_correct_ans = (question.correct_answer|string == letter|string) %}
+                    <div class="option-item 
+                        {% if is_selected %}option-selected{% endif %}
+                        {% if is_correct_ans %}option-correct{% endif %}">
+                        <span class="option-letter">{{ letter }}.</span> {{ text }}
+                        {% if is_selected %}
+                            <span class="badge badge-selected">✓ Student's Answer</span>
+                        {% endif %}
+                        {% if is_correct_ans %}
+                            <span class="badge badge-correct">★ Correct Answer</span>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="answer-box">
+                <div class="answer-label">📌 STUDENT'S ANSWER:</div>
+                <div class="answer-value">
+                    {% if not has_answer %}
+                        <span style="color: var(--accent);">❌ No answer selected</span>
+                    {% else %}
+                        {% if options %}
+                            <strong style="color: var(--accent2); font-size: 16px;">{{ student_answer }}.</strong> 
+                            <span style="color: var(--paper);">{{ options.get(student_answer, 'Option text not found') }}</span>
+                        {% else %}
+                            <strong>{{ student_answer }}</strong>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                
+                <div class="correct-answer">
+                    <div class="answer-label">✅ CORRECT ANSWER:</div>
+                    <div class="answer-value">
+                        {% if options %}
+                            <strong style="color: var(--green); font-size: 16px;">{{ question.correct_answer }}.</strong> 
+                            <span style="color: var(--green);">{{ options.get(question.correct_answer, 'Option text not found') }}</span>
+                        {% else %}
+                            <strong style="color: var(--green);">{{ question.correct_answer }}</strong>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="status-icon">
+                {% if not has_answer %}
+                    <span class="status-incorrect">✗ Not answered (0 marks)</span>
+                {% elif is_correct %}
+                    <span class="status-correct">✓ CORRECT! (+{{ question.marks }} marks)</span>
+                {% else %}
+                    <span class="status-incorrect">✗ INCORRECT (0 marks)</span>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</html>

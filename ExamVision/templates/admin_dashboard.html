@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard — ExamVision</title>
+    <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --ink: #0a0a0f;
+            --paper: #f5f3ee;
+            --accent: #e63946;
+            --accent2: #457b9d;
+            --gold: #f4a261;
+            --green: #4ade80;
+            --surface: #141420;
+            --card: #1a1a2e;
+            --border: rgba(245,243,238,0.08);
+            --muted: rgba(245,243,238,0.45);
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'DM Sans', sans-serif; background: var(--ink); color: var(--paper); min-height: 100vh; }
+
+        nav {
+            padding: 0 40px; height: 64px;
+            display: flex; align-items: center; justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10,10,15,0.98);
+            position: sticky; top: 0; z-index: 100;
+        }
+        .logo { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 800; }
+        .logo span { color: var(--accent); }
+        .logo-badge {
+            font-size: 11px; background: rgba(230,57,70,0.15); border: 1px solid rgba(230,57,70,0.3);
+            color: var(--accent); padding: 3px 10px; border-radius: 100px;
+            font-weight: 600; margin-left: 10px;
+        }
+        .nav-right { display: flex; align-items: center; gap: 12px; }
+        .user-chip {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--card); border: 1px solid var(--border);
+            padding: 8px 16px; border-radius: 100px;
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .user-chip:hover { border-color: rgba(69,123,157,0.4); }
+        .user-av {
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--accent); display: flex;
+            align-items: center; justify-content: center;
+            font-size: 13px; font-weight: 700; color: white;
+        }
+        .user-name { font-size: 14px; color: var(--paper); }
+        .btn-link {
+            padding: 8px 18px; border-radius: 8px;
+            background: transparent; color: var(--muted);
+            border: 1px solid var(--border);
+            text-decoration: none;
+            transition: 0.2s;
+        }
+        .btn-link:hover { color: var(--accent); border-color: rgba(230,57,70,0.3); }
+
+        .main { max-width: 1400px; margin: 0 auto; padding: 40px; }
+        .page-title { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 800; margin-bottom: 8px; }
+        .page-sub { color: var(--muted); margin-bottom: 32px; }
+
+        /* Stats */
+        .stats-row { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 40px; }
+        .stat-card {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 12px; padding: 24px; text-align: center;
+        }
+        .stat-val { font-family: 'Syne', sans-serif; font-size: 36px; font-weight: 800; }
+        .stat-label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 8px; }
+
+        /* Tables */
+        .section { margin-bottom: 40px; }
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .section-title { font-family: 'Syne', sans-serif; font-size: 20px; font-weight: 700; }
+        .section-search {
+            min-width: 260px;
+            max-width: 420px;
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(245,243,238,0.04);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--paper);
+            font-size: 13px;
+            outline: none;
+        }
+        .section-search::placeholder { color: var(--muted); }
+        .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow-x: auto; }
+        .table-wrap.scrollable { max-height: 360px; overflow: auto; }
+        table { width: 100%; border-collapse: collapse; min-width: 600px; }
+        th { padding: 12px 16px; text-align: left; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 500; border-bottom: 1px solid var(--border); }
+        td { padding: 12px 16px; font-size: 13px; border-top: 1px solid var(--border); }
+        tr:hover td { background: rgba(245,243,238,0.02); }
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 100px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+        .badge-admin { background: rgba(230,57,70,0.15); color: var(--accent); }
+        .badge-teacher { background: rgba(69,123,157,0.15); color: var(--accent2); }
+        .badge-student { background: rgba(74,222,128,0.12); color: var(--green); }
+        .badge-active { background: rgba(74,222,128,0.12); color: var(--green); }
+        .badge-inactive { background: rgba(230,57,70,0.12); color: var(--accent); }
+        .btn-icon {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: 0.2s;
+            display: inline-block;
+            margin: 0 2px;
+        }
+        .btn-danger { background: rgba(230,57,70,0.15); color: var(--accent); border: 1px solid rgba(230,57,70,0.2); }
+        .btn-danger:hover { background: rgba(230,57,70,0.25); }
+        .btn-warning { background: rgba(244,162,97,0.15); color: var(--gold); border: 1px solid rgba(244,162,97,0.2); }
+        .btn-warning:hover { background: rgba(244,162,97,0.25); }
+        .empty-row td { text-align: center; color: var(--muted); padding: 40px; }
+        .profile-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .profile-modal.show { display: flex; }
+        .profile-modal-content {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+        }
+        .toast-stack {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1200;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 380px;
+        }
+        .toast {
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--paper);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+            animation: toast-in 0.18s ease-out;
+        }
+        .toast-success { border-color: rgba(74,222,128,0.35); color: #4ade80; }
+        .toast-danger { border-color: rgba(230,57,70,0.35); color: #f87171; }
+        .toast-warning { border-color: rgba(244,162,97,0.35); color: var(--gold); }
+        @keyframes toast-in { from { opacity: 0; transform: translateY(-6px);} to { opacity: 1; transform: translateY(0);} }
+        @media(max-width: 900px) {
+            nav { padding: 0 20px; }
+            .main { padding: 20px; }
+            .stats-row { grid-template-columns: repeat(2,1fr); }
+        }
+    </style>
+</head>
+<body>
+    <nav>
+        <div style="display:flex;align-items:center;">
+            <div class="logo">Exam<span>Vision</span></div>
+            <div class="logo-badge">ADMIN</div>
+        </div>
+        <div class="nav-right">
+            <div class="user-chip" onclick="openProfile()">
+                <div class="user-av">{{ (current_user.full_name or 'A')[0].upper() }}</div>
+                <div class="user-name">{{ current_user.full_name or current_user.username }}</div>
+            </div>
+            <a href="/logout" class="btn-link">Logout</a>
+        </div>
+    </nav>
+
+    <!-- Profile Modal -->
+    <div class="profile-modal" id="profileModal">
+        <div class="profile-modal-content">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <h3 style="font-family: 'Syne', sans-serif;">My Profile</h3>
+                <button onclick="closeProfile()" style="background: none; border: none; color: var(--muted); font-size: 24px; cursor: pointer;">✕</button>
+            </div>
+            <form method="POST" action="/profile/update">
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px;">Full Name</label>
+                    <input type="text" name="full_name" value="{{ current_user.full_name or '' }}" style="width: 100%; padding: 10px; background: rgba(245,243,238,0.04); border: 1px solid var(--border); border-radius: 8px; color: var(--paper);">
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px;">Email</label>
+                    <input type="text" value="{{ current_user.email }}" disabled style="width: 100%; padding: 10px; background: rgba(245,243,238,0.02); border: 1px solid var(--border); border-radius: 8px; color: var(--muted);">
+                </div>
+                <div class="form-group" style="margin-bottom: 16px;">
+                    <label style="display: block; font-size: 12px; color: var(--muted); margin-bottom: 5px;">Department (Optional)</label>
+                    <select name="department" style="width: 100%; padding: 10px; background: rgba(245,243,238,0.04); border: 1px solid var(--border); border-radius: 8px; color: var(--paper);">
+                        <option value="">— Select —</option>
+                        {% for d in departments %}
+                        <option value="{{ d }}" {% if current_user.department == d %}selected{% endif %}>{{ d }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn-link" style="width: 100%; text-align: center; background: var(--accent2); color: white; border: none; padding: 12px;">💾 Save Changes</button>
+            </form>
+        </div>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        <div class="toast-stack" id="toastStack">
+            {% for category, message in messages %}
+                <div class="toast toast-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        </div>
+        {% endif %}
+    {% endwith %}
+
+    <div class="main">
+        <div class="page-title">Admin Dashboard</div>
+        <div class="page-sub">Manage users, exams, and system settings</div>
+
+        <!-- Stats -->
+        <div class="stats-row">
+            <div class="stat-card">
+                <div class="stat-val" style="color: var(--accent2);">{{ users|length }}</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" style="color: var(--green);">{{ exams|length }}</div>
+                <div class="stat-label">Total Exams</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" style="color: var(--gold);">{{ results|length }}</div>
+                <div class="stat-label">Total Attempts</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-val" style="color: var(--accent);">{{ cheating_logs|length }}</div>
+                <div class="stat-label">Violations</div>
+            </div>
+        </div>
+
+        <!-- Users Section -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">👥 User Management</div>
+                <input type="text" id="userSearch" class="section-search" placeholder="Search users by username, name, email, role, department..." oninput="filterTableRows('userSearch', 'usersTableBody')">
+            </div>
+            <div class="table-wrap scrollable">
+                <table>
+                    <thead>
+                        <tr><th>Username</th><th>Full Name</th><th>Email</th><th>Role</th><th>Department</th><th>Enrollment</th><th>Password</th><th>Status</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.full_name or '-' }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <span class="badge 
+                                    {% if user.role == 'admin' %}badge-admin
+                                    {% elif user.role == 'teacher' %}badge-teacher
+                                    {% else %}badge-student{% endif %}">
+                                    {{ user.role }}
+                                </span>
+                            </td>
+                            <td>{{ user.department or '-' }}</td>
+                            <td>{{ user.enrollment_number or '-' }}</td>
+                            <td>
+                                {% if user.plain_password %}
+                                    <code style="color: var(--paper);">{{ user.plain_password }}</code>
+                                {% else %}
+                                    <span style="color: var(--muted);">Not available</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <span class="badge {% if user.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                                    {% if user.is_active %}Active{% else %}Disabled{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                {% if user.role != 'admin' %}
+                                <a href="/admin/toggle-user/{{ user.id }}" class="btn-icon btn-warning" onclick="return confirm('Toggle user status?')">
+                                    {% if user.is_active %}🔒 Disable{% else %}✅ Enable{% endif %}
+                                </a>
+                                <form method="POST" action="/admin/reset-user-password/{{ user.id }}" style="display:inline;">
+                                    <button type="submit" class="btn-icon btn-warning" onclick="return confirm('Reset password for this user?')">🔑 Reset Password</button>
+                                </form>
+                                <form method="POST" action="/admin/set-user-password/{{ user.id }}" style="display:inline;" onsubmit="return setPasswordForUser(this, '{{ user.username }}');">
+                                    <input type="hidden" name="new_password" value="">
+                                    <button type="submit" class="btn-icon btn-warning">✍️ Set Password</button>
+                                </form>
+                                <a href="/admin/delete-user/{{ user.id }}" class="btn-icon btn-danger" onclick="return confirm('Delete user? This will remove all their data.')">🗑 Delete</a>
+                                {% else %}
+                                <span style="color: var(--muted);">—</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Exams Section -->
+        <div class="section">
+            <div class="section-header">
+                <div class="section-title">📝 Exam Management</div>
+                <input type="text" id="examSearch" class="section-search" placeholder="Search exams by id, title, type, marks, status..." oninput="filterTableRows('examSearch', 'examsTableBody')">
+            </div>
+            <div class="table-wrap scrollable">
+                <table>
+                    <thead>
+                        <tr><th>ID</th><th>Title</th><th>Created By</th><th>Exam Type</th><th>Total Marks</th><th>Status</th><th>Actions</th></tr>
+                    </thead>
+                    <tbody id="examsTableBody">
+                        {% for exam in exams %}
+                        <tr>
+                            <td>{{ exam.id }}</td>
+                            <td>{{ exam.title }}</td>
+                            <td>{{ exam.created_by }}</td>
+                            <td>{{ exam.exam_type|capitalize }}</td>
+                            <td>{{ exam.total_marks }}</td>
+                            <td>
+                                <span class="badge {% if exam.is_active %}badge-active{% else %}badge-inactive{% endif %}">
+                                    {% if exam.is_active %}Active{% else %}Inactive{% endif %}
+                                </span>
+                            </td>
+                            <td>
+                                <a href="/admin/delete-exam/{{ exam.id }}" class="btn-icon btn-danger" onclick="return confirm('Delete exam? This will remove all questions and results.')">🗑 Delete</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function openProfile() {
+            document.getElementById('profileModal').classList.add('show');
+        }
+        function closeProfile() {
+            document.getElementById('profileModal').classList.remove('show');
+        }
+        function setPasswordForUser(form, username) {
+            const pwd = prompt('Set new password for ' + username + ':');
+            if (pwd === null) return false;
+            const clean = pwd.trim();
+            if (clean.length < 4) {
+                alert('Password must be at least 4 characters.');
+                return false;
+            }
+            form.querySelector('input[name="new_password"]').value = clean;
+            return true;
+        }
+        function filterTableRows(inputId, bodyId) {
+            const query = (document.getElementById(inputId).value || '').toLowerCase().trim();
+            const rows = document.querySelectorAll('#' + bodyId + ' tr');
+            rows.forEach((row) => {
+                const text = (row.textContent || '').toLowerCase();
+                row.style.display = text.includes(query) ? '' : 'none';
+            });
+        }
+        window.addEventListener('load', function() {
+            document.querySelectorAll('.toast').forEach(function(toast) {
+                setTimeout(function() {
+                    toast.style.transition = 'opacity 0.2s ease';
+                    toast.style.opacity = '0';
+                    setTimeout(function() { toast.remove(); }, 220);
+                }, 1800);
+            });
+        });
+        document.getElementById('profileModal').addEventListener('click', function(e) {
+            if (e.target === this) closeProfile();
+        });
+    </script>
+</body>
+</html>
